@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+OpenIDE-Module: de.bfg9000.beanshell
+OpenIDE-Module-Layer: de/bfg9000/beanshell/layer.xml
+OpenIDE-Module-Localizing-Bundle: de/bfg9000/beanshell/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0.0
+
