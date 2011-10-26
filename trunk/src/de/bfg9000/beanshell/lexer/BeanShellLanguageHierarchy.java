@@ -20,7 +20,8 @@ import java.util.*;
 import org.netbeans.spi.lexer.*;
 
 /**
- *
+ * LanguageHierarchy for BeanShell Script.
+ * 
  * @author Thomas Werner
  */
 public class BeanShellLanguageHierarchy extends LanguageHierarchy<BeanShellTokenId> {

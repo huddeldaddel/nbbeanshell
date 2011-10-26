@@ -5,7 +5,7 @@
     <folder name="Editors">
         <folder name="text">
             <folder name="x-beanshell">
-                <file name="org-netbeans-modules-editor-NbEditorKit.instance"/>
+                <attr name="displayName" bundlevalue="de.bfg9000.beanshell.Bundle#text/x-beanshell"/>
                 <file name="language.instance">
                     <attr name="instanceCreate" methodvalue="de.bfg9000.beanshell.lexer.BeanShellTokenId.getLanguage"/>
                     <attr name="instanceOf" stringvalue="org.netbeans.api.lexer.Language"/>
@@ -88,7 +88,7 @@
                 <folder name="Factories">
                     <file name="BeanShellDataLoader.instance">
                         <attr name="SystemFileSystem.icon" urlvalue="nbresloc:/de/bfg9000/beanshell/icons/script.gif"/>
-                        <attr name="dataObjectClass" stringvalue="de.bfg9000.beanshell.BeanShellDataObject"/>
+                        <attr name="dataObjectClass" stringvalue="de.bfg9000.beanshell.integration.BeanShellDataObject"/>
                         <attr name="instanceCreate" methodvalue="org.openide.loaders.DataLoaderPool.factory"/>
                         <attr name="mimeType" stringvalue="text/x-beanshell"/>
                     </file>
