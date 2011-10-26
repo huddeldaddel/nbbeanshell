@@ -23,7 +23,8 @@ import org.netbeans.spi.lexer.LexerRestartInfo;
 import org.netbeans.spi.lexer.TokenFactory;
 
 /**
- *
+ * The BeanShell Script lexer
+ * 
  * @author Thomas Werner
  */
 public class BeanShellLexer implements Lexer<BeanShellTokenId> {
