@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Writer;
 
-import org.openide.util.Exceptions;
 import org.openide.windows.IOProvider;
 import org.openide.windows.InputOutput;
 
@@ -55,7 +54,7 @@ public final class RunAction implements ActionListener {
             interpreter.setOut(new PrintStream(new WriterOutputStream(io.getOut())));
             interpreter.eval(context.getPrimaryFile().asText());
         } catch(Exception ex) {
-            Exceptions.printStackTrace(ex);
+            ex.printStackTrace(io.getErr());
         } finally {
             io.getErr().close();
             io.getOut().close();
