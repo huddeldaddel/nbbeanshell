@@ -77,7 +77,9 @@ public final class ShellTopComponent extends TopComponent {
     @Override
     public void componentClosed() {
         if((null != shellRunner) && shellRunner.isAlive())
-            shellRunner.stop();
+            try {
+                shellRunner.stop();
+            } catch(ThreadDeath td) { /* That's OK - we wanted it that way */ }
     }
 
     void writeProperties(java.util.Properties p) { }
