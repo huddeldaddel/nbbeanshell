@@ -30,7 +30,10 @@ public class ProjectLookupProvider implements LookupProvider {
 
     @Override
     public Lookup createAdditionalLookup(Lookup lookup) {
-        return Lookups.fixed(new BeanShellActionProvider(lookup.lookup(ActionProvider.class)));
+        final ActionProvider actionProvider = lookup.lookup(ActionProvider.class);
+        if(null != actionProvider)
+            return Lookups.fixed(new BeanShellActionProvider(actionProvider));
+        return Lookups.fixed();
     }
 
     private static class BeanShellActionProvider implements ActionProvider {
