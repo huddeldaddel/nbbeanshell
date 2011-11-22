@@ -17,11 +17,11 @@ package de.bfg9000.beanshell.console;
 
 import bsh.Interpreter;
 import bsh.util.JConsole;
-import org.openide.util.NbBundle;
-import org.openide.windows.TopComponent;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
+import org.openide.util.NbBundle;
+import org.openide.windows.TopComponent;
 
 /**
  * Top component which displays a BeanShell console.
@@ -40,7 +40,7 @@ public final class ShellTopComponent extends TopComponent {
 
     private static final long serialVersionUID = 2451386404816691136L;
 
-    private Thread shellRunner;
+    private ShellThread shellRunner;
 
     public ShellTopComponent() {
         initComponents();
@@ -70,20 +70,37 @@ public final class ShellTopComponent extends TopComponent {
         final Interpreter interpreter = new Interpreter(console);
         add(console, java.awt.BorderLayout.CENTER);
 
-        shellRunner = new Thread(interpreter);
+        shellRunner = new ShellThread(interpreter);
         shellRunner.start();
     }
 
     @Override
     public void componentClosed() {
         if((null != shellRunner) && shellRunner.isAlive())
-            try {
-                shellRunner.stop();
-            } catch(ThreadDeath td) { /* That's OK - we wanted it that way */ }
+            shellRunner.stop();
     }
 
     void writeProperties(java.util.Properties p) { }
 
     void readProperties(java.util.Properties p) { }
 
+    /**
+     * A Thread subclass that catches the ThreadDeath. We do not want it to be propagated to the UI.
+     */
+    private static class ShellThread extends Thread {
+        
+        private final Runnable interpreter;
+        
+        public ShellThread(Interpreter runnable) {
+            interpreter = runnable;
+        }
+        
+        @Override
+        public void run() {
+            try {
+                interpreter.run();
+            } catch(ThreadDeath td) { /* That's OK - we wanted it that way */ }
+        }
+    }
+    
 }
