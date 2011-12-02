@@ -15,6 +15,7 @@
  */
 package de.bfg9000.beanshell.console;
 
+import bsh.EvalError;
 import bsh.Interpreter;
 import bsh.util.JConsole;
 import org.netbeans.api.settings.ConvertAsProperties;
@@ -89,7 +90,7 @@ public final class ShellTopComponent extends TopComponent {
      */
     private static class ShellThread extends Thread {
         
-        private final Runnable interpreter;
+        private final Interpreter interpreter;
         
         public ShellThread(Interpreter runnable) {
             interpreter = runnable;
@@ -98,7 +99,9 @@ public final class ShellTopComponent extends TopComponent {
         @Override
         public void run() {
             try {
+                interpreter.set("bsh.system.shutdownOnExit", false);
                 interpreter.run();
+            } catch(EvalError ee) {   /* That should not happen            */ 
             } catch(ThreadDeath td) { /* That's OK - we wanted it that way */ }
         }
     }

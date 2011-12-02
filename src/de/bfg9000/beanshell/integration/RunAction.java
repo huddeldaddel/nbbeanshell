@@ -16,24 +16,22 @@
 package de.bfg9000.beanshell.integration;
 
 import bsh.Interpreter;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Writer;
-
+import org.openide.cookies.SaveCookie;
 import org.openide.windows.IOProvider;
 import org.openide.windows.InputOutput;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 
 /**
  * Action that runs the current script file.
  *
  * @author Thomas Werner
  */
-public final class RunAction implements ActionListener {
-
-    private static final long serialVersionUID = -4861693586138919610L;
+class RunAction {
 
     private final BeanShellDataObject context;
 
@@ -41,14 +39,22 @@ public final class RunAction implements ActionListener {
         this.context = context;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent ev) {
+    public void perform() {
         final InputOutput io = IOProvider.getDefault().getIO("BeanShell", false);
         io.select();
 
         try {
             io.getOut().reset();
 
+            if(context.isModified()) {
+                final TopComponent tComponent = WindowManager.getDefault().getRegistry().getActivated();
+                if(null != tComponent) {
+                    final SaveCookie sCookie = tComponent.getLookup().lookup(SaveCookie.class);
+                    if(null != sCookie)
+                        sCookie.save();
+                }
+            }
+            
             Interpreter interpreter = new Interpreter();
             interpreter.setErr(new PrintStream(new WriterOutputStream(io.getErr())));
             interpreter.setOut(new PrintStream(new WriterOutputStream(io.getOut())));

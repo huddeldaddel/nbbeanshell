@@ -28,7 +28,7 @@ import org.netbeans.modules.csl.spi.LanguageRegistration;
 public class BeanShellLanguage extends DefaultLanguageConfig {
 
     @Override
-    public Language getLexerLanguage() {
+    public Language<BeanShellTokenId> getLexerLanguage() {
         return BeanShellTokenId.getLanguage();
     }
 
