@@ -32,15 +32,20 @@ public class ProjectLookupProvider implements LookupProvider {
     public Lookup createAdditionalLookup(Lookup lookup) {
         final ActionProvider actionProvider = lookup.lookup(ActionProvider.class);
         if(null != actionProvider)
-            return Lookups.fixed(new BeanShellActionProvider(actionProvider));
-        return Lookups.fixed();
+            return Lookups.fixed(new WrappingActionProvider(actionProvider));
+        
+        return Lookups.fixed(new StandaloneRunActionProvider(), new StandaloneCompileActionProvider());
     }
 
-    private static class BeanShellActionProvider implements ActionProvider {
+    /**
+     * This class adds the "run.single" action to the predefined actions of the project. It therefore wrapps the 
+     * existing action provider of the project. This setup is the preferred way up to NetBeans version 7.0.
+     */
+    private static class WrappingActionProvider implements ActionProvider {
 
         private final ActionProvider wrappedActionProvider;
 
-        public BeanShellActionProvider(ActionProvider wrapped) {
+        public WrappingActionProvider(ActionProvider wrapped) {
             wrappedActionProvider = wrapped;
         }
 
@@ -56,14 +61,69 @@ public class ProjectLookupProvider implements LookupProvider {
                 return;
             }
 
-            final RunAction runAction = new RunAction(context.lookup(BeanShellDataObject.class));
-            runAction.actionPerformed(null);
+            if("compile.single".equals(command))
+                new CompileAction(context.lookup(BeanShellDataObject.class)).perform();
+            
+            if("run.single".equals(command))
+                new RunAction(context.lookup(BeanShellDataObject.class)).perform();
         }
 
         @Override
         public boolean isActionEnabled(String command, Lookup context) throws IllegalArgumentException {
             final boolean wrappedResult = wrappedActionProvider.isActionEnabled(command, context);
             return wrappedResult || (null != context.lookup(BeanShellDataObject.class));
+        }
+
+    }
+    
+    /**
+     * This class provides the "run.single" action. This very basic setup is the preferred way since NetBeans version 
+     * 7.1.
+     */
+    private static final class StandaloneRunActionProvider implements ActionProvider {
+
+        private final String COMMAND = "run.single";
+        
+        @Override
+        public String[] getSupportedActions() {
+            return new String[] {COMMAND};
+        }
+
+        @Override
+        public void invokeAction(String command, Lookup context) throws IllegalArgumentException {
+            if((null != context.lookup(BeanShellDataObject.class)) && (COMMAND.equals(command)))
+                new RunAction(context.lookup(BeanShellDataObject.class)).perform();
+        }
+
+        @Override
+        public boolean isActionEnabled(String command, Lookup context) throws IllegalArgumentException {
+            return null != context.lookup(BeanShellDataObject.class);
+        }
+
+    }
+    
+    /**
+     * This class provides the "run.single" action. This very basic setup is the preferred way since NetBeans version 
+     * 7.1.
+     */
+    private static final class StandaloneCompileActionProvider implements ActionProvider {
+
+        private final String COMMAND = "compile.single";
+        
+        @Override
+        public String[] getSupportedActions() {
+            return new String[] {COMMAND};
+        }
+
+        @Override
+        public void invokeAction(String command, Lookup context) throws IllegalArgumentException {
+            if((null != context.lookup(BeanShellDataObject.class)) && (COMMAND.equals(command)))
+                new CompileAction(context.lookup(BeanShellDataObject.class)).perform();
+        }
+
+        @Override
+        public boolean isActionEnabled(String command, Lookup context) throws IllegalArgumentException {
+            return null != context.lookup(BeanShellDataObject.class);
         }
 
     }

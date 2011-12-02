@@ -39,6 +39,7 @@ public class BeanShellLexer implements Lexer<BeanShellTokenId> {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public org.netbeans.api.lexer.Token<BeanShellTokenId> nextToken () {
         try {
             Token token = bshParserTokenManager.getNextToken();
