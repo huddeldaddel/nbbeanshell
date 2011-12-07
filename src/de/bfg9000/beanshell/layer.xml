@@ -97,6 +97,16 @@
         </folder>
     </folder>
 
+    <folder name="Navigator">
+        <folder name="Panels">
+            <folder name="text">
+                <folder name="x-beanshell">
+                    <file name="de-bfg9000-beanshell-navigator-BeanShellNavigatorPanel.instance" />
+                </folder>
+            </folder>
+        </folder>
+    </folder>
+
     <folder name="OptionsDialog">
         <folder name="PreviewExamples">
             <folder name="text">

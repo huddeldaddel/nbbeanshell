@@ -1,0 +1,46 @@
+int j = 0;
+int t = 0;
+
+FooObject() {
+    int t = 2;                              // redefinition
+    j = 2;                                  // assignment to outer variable
+
+    addOne() {
+        j = j +1;                           // assignment to outer variable
+        t = t +1;                           // assignment to inner variable
+    }
+
+    print() {
+        print("level 1 j: " +j);            // => 3
+        print("level 1 t: " +t);            // => 4
+    }
+
+    BarObject() {
+        int j = 23;                         // redefinition
+        addOne() {
+            j = j +1;                       // assignment to inner variable
+            t = t +1;                       // assignment to outer variable
+        }
+        print() {
+            print("level 2 j: " +j);        // => 24
+            print("level 2 t: " +t);        // => 4
+        }
+        return this;
+    }
+
+    test() {
+        b = BarObject();
+        b.addOne();
+        b.print();
+    }
+
+    return this;
+}
+
+f = FooObject();
+f.addOne();
+f.test();
+f.print();
+
+print("level 0 j: " +j);                    // => 3
+print("level 0 t: " +t);                    // => 0
