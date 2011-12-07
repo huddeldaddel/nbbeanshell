@@ -1,13 +1,24 @@
+/*
+ * nbBeanShell -- a integration of BeanShell into the NetBeans IDE
+ * Copyright (C) 2011 Thomas Werner
+ *
+ * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
+ * Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any
+ * later version.
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+ * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
+ * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+ */
 package de.bfg9000.beanshell.integration;
 
 import bsh.Parser;
 import java.io.IOException;
 import java.io.InputStream;
-import org.openide.cookies.SaveCookie;
-import org.openide.windows.IOProvider;
 import org.openide.windows.InputOutput;
-import org.openide.windows.TopComponent;
-import org.openide.windows.WindowManager;
 
 /**
  * Action that parses the current script file. BeanShell scripts are not compiled. So this action just uses the Parser
@@ -15,30 +26,19 @@ import org.openide.windows.WindowManager;
  *
  * @author Thomas Werner
  */
-public class CompileAction {
-
-    private final BeanShellDataObject context;
+class CompileAction extends AbstractAction {
 
     public CompileAction(BeanShellDataObject context) {
-        this.context = context;
+        super(context);
     }
 
-    public void perform() {
-        final InputOutput io = IOProvider.getDefault().getIO("BeanShell", false);
+    @Override
+    protected boolean perform(InputOutput io) {
+        boolean result = true;
         InputStream iStream = null;
-        io.select();
         
         try {
-            io.getOut().reset();
-            
-            if(context.isModified()) {
-                final TopComponent tComponent = WindowManager.getDefault().getRegistry().getActivated();
-                if(null != tComponent) {
-                    final SaveCookie sCookie = tComponent.getLookup().lookup(SaveCookie.class);
-                    if(null != sCookie)
-                        sCookie.save();
-                }
-            }
+            saveScriptDocument();
             
             iStream = context.getPrimaryFile().getInputStream();
             final Parser parser = new Parser(iStream);
@@ -52,17 +52,20 @@ public class CompileAction {
             } catch(Error err) {
                 io.getErr().println(err.getMessage());
             }
-            
         } catch(Exception ex) {
             ex.printStackTrace(io.getErr());
+            result = false;
         } finally {
-            io.getErr().close();
-            io.getOut().close();
-            
             try {
                 iStream.close();
             } catch (IOException ex) { }
         }
+        return result;
+    }
+    
+    @Override
+    protected String getTaskName() {
+        return "Compile " +context.getPrimaryFile().getName();
     }
     
 }

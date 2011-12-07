@@ -1,5 +1,5 @@
 /*
- * nbBeanShell -- a integration of BeanScript into the NetBeans IDE
+ * nbBeanShell -- a integration of BeanShell into the NetBeans IDE
  * Copyright (C) 2011 Thomas Werner
  *
  * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
@@ -20,53 +20,40 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Writer;
-import org.openide.cookies.SaveCookie;
-import org.openide.windows.IOProvider;
 import org.openide.windows.InputOutput;
-import org.openide.windows.TopComponent;
-import org.openide.windows.WindowManager;
 
 /**
  * Action that runs the current script file.
  *
  * @author Thomas Werner
  */
-class RunAction {
-
-    private final BeanShellDataObject context;
+class RunAction extends AbstractAction {
 
     public RunAction(BeanShellDataObject context) {
-        this.context = context;
+        super(context);
     }
 
-    public void perform() {
-        final InputOutput io = IOProvider.getDefault().getIO("BeanShell", false);
-        io.select();
-
+    @Override
+    protected boolean perform(InputOutput io) {        
         try {
-            io.getOut().reset();
-
-            if(context.isModified()) {
-                final TopComponent tComponent = WindowManager.getDefault().getRegistry().getActivated();
-                if(null != tComponent) {
-                    final SaveCookie sCookie = tComponent.getLookup().lookup(SaveCookie.class);
-                    if(null != sCookie)
-                        sCookie.save();
-                }
-            }
-            
+            saveScriptDocument();
+                        
             Interpreter interpreter = new Interpreter();
             interpreter.setErr(new PrintStream(new WriterOutputStream(io.getErr())));
             interpreter.setOut(new PrintStream(new WriterOutputStream(io.getOut())));
             interpreter.eval(context.getPrimaryFile().asText());
+            return true;
         } catch(Exception ex) {
             ex.printStackTrace(io.getErr());
-        } finally {
-            io.getErr().close();
-            io.getOut().close();
+            return false;
         }
+    }    
+    
+    @Override
+    protected String getTaskName() {
+        return "Run " +context.getPrimaryFile().getName();
     }
-
+    
     /**
      * Adapter that connects a Writer to an OutputStream.
      */

@@ -1,5 +1,5 @@
 /*
- * nbBeanShell -- a integration of BeanScript into the NetBeans IDE
+ * nbBeanShell -- a integration of BeanShell into the NetBeans IDE
  * Copyright (C) 2011 Thomas Werner
  *
  * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General

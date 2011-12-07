@@ -1,5 +1,5 @@
 /*
- * nbBeanShell -- a integration of BeanScript into the NetBeans IDE
+ * nbBeanShell -- a integration of BeanShell into the NetBeans IDE
  * Copyright (C) 2011 Thomas Werner
  *
  * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
@@ -46,7 +46,7 @@ public class ProjectLookupProvider implements LookupProvider {
         private final ActionProvider wrappedActionProvider;
 
         public WrappingActionProvider(ActionProvider wrapped) {
-            wrappedActionProvider = wrapped;
+            wrappedActionProvider = wrapped;            
         }
 
         @Override
@@ -62,10 +62,10 @@ public class ProjectLookupProvider implements LookupProvider {
             }
 
             if("compile.single".equals(command))
-                new CompileAction(context.lookup(BeanShellDataObject.class)).perform();
+                new Thread(new CompileAction(context.lookup(BeanShellDataObject.class))).start();
             
             if("run.single".equals(command))
-                new RunAction(context.lookup(BeanShellDataObject.class)).perform();
+                new Thread(new RunAction(context.lookup(BeanShellDataObject.class))).start();
         }
 
         @Override
@@ -92,7 +92,7 @@ public class ProjectLookupProvider implements LookupProvider {
         @Override
         public void invokeAction(String command, Lookup context) throws IllegalArgumentException {
             if((null != context.lookup(BeanShellDataObject.class)) && (COMMAND.equals(command)))
-                new RunAction(context.lookup(BeanShellDataObject.class)).perform();
+                new Thread(new RunAction(context.lookup(BeanShellDataObject.class))).start();
         }
 
         @Override
@@ -118,7 +118,7 @@ public class ProjectLookupProvider implements LookupProvider {
         @Override
         public void invokeAction(String command, Lookup context) throws IllegalArgumentException {
             if((null != context.lookup(BeanShellDataObject.class)) && (COMMAND.equals(command)))
-                new CompileAction(context.lookup(BeanShellDataObject.class)).perform();
+                new Thread(new CompileAction(context.lookup(BeanShellDataObject.class))).start();
         }
 
         @Override
