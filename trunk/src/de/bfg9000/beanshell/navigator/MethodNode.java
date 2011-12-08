@@ -20,6 +20,7 @@ import bsh.BshModifierInfo;
 import bsh.BshParameterInfo;
 import bsh.ParserConnector;
 import java.awt.Image;
+import javax.swing.text.JTextComponent;
 import org.openide.nodes.Children;
 
 /**
@@ -31,8 +32,8 @@ class MethodNode extends BeanShellNode {
     
     private final BshMethodInfo method;
 
-    public MethodNode(BshMethodInfo method, Children children) {
-        super(children);
+    public MethodNode(BshMethodInfo method, Children children, JTextComponent connectedComponent) {
+        super(children, connectedComponent);
         this.method = method;
         
         setDisplayName(buildDisplayName());

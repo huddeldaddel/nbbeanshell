@@ -19,6 +19,7 @@ import bsh.BshInfoContainer;
 import bsh.BshMethodInfo;
 import bsh.BshVariableInfo;
 import java.util.*;
+import javax.swing.text.JTextComponent;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 import org.openide.nodes.Node;
@@ -30,9 +31,11 @@ import org.openide.nodes.Node;
 class NodeFactory extends ChildFactory {
 
     private final BshInfoContainer bshInfoContainer;
+    private final JTextComponent connectedComponent;
     
-    public NodeFactory(BshInfoContainer bshInfoContainer) {
+    public NodeFactory(BshInfoContainer bshInfoContainer, JTextComponent connectedComponent) {
         this.bshInfoContainer = bshInfoContainer;
+        this.connectedComponent = connectedComponent;
     }
     
     @Override
@@ -65,11 +68,13 @@ class NodeFactory extends ChildFactory {
     
     @Override
     protected Node createNodeForKey(Object key) {
-        if(key instanceof BshMethodInfo)
-            return new MethodNode((BshMethodInfo) key, Children.create(new NodeFactory((BshMethodInfo) key), false));
+        if(key instanceof BshMethodInfo) {
+            final ChildFactory factory = new NodeFactory((BshMethodInfo) key, connectedComponent);
+            return new MethodNode((BshMethodInfo) key, Children.create(factory, false), connectedComponent);
+        }
         
         if(key instanceof BshVariableInfo)
-            return new VariableNode((BshVariableInfo) key);
+            return new VariableNode((BshVariableInfo) key, connectedComponent);
         
         return null;
     }
