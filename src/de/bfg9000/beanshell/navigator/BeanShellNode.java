@@ -16,8 +16,12 @@
 package de.bfg9000.beanshell.navigator;
 
 import java.awt.Image;
+import java.awt.event.ActionEvent;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.text.JTextComponent;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 import org.openide.util.Lookup;
@@ -31,12 +35,43 @@ abstract class BeanShellNode extends AbstractNode {
     
     protected static final String PRFX = "/de/bfg9000/beanshell/icons/";
     
-    public BeanShellNode(Children children) {
+    private final JTextComponent connectedComponent;
+    
+    public BeanShellNode(Children children, JTextComponent connectedComponent) {
         super(children);
+        this.connectedComponent = connectedComponent;
     }
 
-    public BeanShellNode(Children children, Lookup lookup) {
+    public BeanShellNode(Children children, Lookup lookup, JTextComponent connectedComponent) {
         super(children, lookup);
+        this.connectedComponent = connectedComponent;
+    }
+    
+    @Override
+    public Action getPreferredAction() {
+        return new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {                
+                final String text = connectedComponent.getText();
+                int cr = 0;
+                int line = 1;
+                int position = 0;
+                while(position < text.length()) {
+                    if(getLineNumber() == line) {
+                        connectedComponent.setCaretPosition(position -cr);
+                        return;
+                    }
+
+                    if(text.charAt(position) == '\n')
+                        line++;
+
+                    if(text.charAt(position) == '\r')
+                        cr++;
+
+                    position++;                                
+                }
+            }
+        };
     }
     
     public abstract int getLineNumber();

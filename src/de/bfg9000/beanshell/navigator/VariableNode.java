@@ -18,6 +18,7 @@ package de.bfg9000.beanshell.navigator;
 import bsh.BshModifierInfo;
 import bsh.BshVariableInfo;
 import java.awt.Image;
+import javax.swing.text.JTextComponent;
 import org.openide.nodes.Children;
 
 /**
@@ -29,8 +30,8 @@ class VariableNode extends BeanShellNode {
     
     private final BshVariableInfo variable;
 
-    public VariableNode(BshVariableInfo variable) {
-        super(Children.LEAF);
+    public VariableNode(BshVariableInfo variable, JTextComponent connectedComponent) {
+        super(Children.LEAF, connectedComponent);
         this.variable = variable;
         
         setDisplayName(buildDisplayName());

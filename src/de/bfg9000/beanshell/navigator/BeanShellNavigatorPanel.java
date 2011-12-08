@@ -16,6 +16,8 @@
 package de.bfg9000.beanshell.navigator;
 
 import java.awt.BorderLayout;
+import java.util.Timer;
+import java.util.TimerTask;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -28,7 +30,6 @@ import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.BeanTreeView;
 import org.openide.nodes.Node;
 import org.openide.util.Lookup;
-import org.openide.windows.WindowManager;
 
 /**
  * A JPanel based component that can be used as NavigatorPanel (Navigator API). The panel displays the structure of a
@@ -43,6 +44,7 @@ public class BeanShellNavigatorPanel extends JPanel
     private final BeanTreeView beanTreeView = new BeanTreeView();
     private final Lookup lookup;
     
+    private Timer lookupTimer;
     private JTextComponent connectedTextComponent;
     
     public BeanShellNavigatorPanel() {
@@ -74,23 +76,17 @@ public class BeanShellNavigatorPanel extends JPanel
         connectedTextComponent = org.netbeans.api.editor.EditorRegistry.lastFocusedComponent();
         if(null != connectedTextComponent) {
             connectedTextComponent.getDocument().addDocumentListener(this);
+            updateContent();
         } else { 
-            WindowManager.getDefault().invokeWhenUIReady(new Runnable() {
-                @Override
-                public void run() {
-                    connectedTextComponent = org.netbeans.api.editor.EditorRegistry.lastFocusedComponent();
-                    if(null != connectedTextComponent) 
-                        connectedTextComponent.getDocument().addDocumentListener(BeanShellNavigatorPanel.this);
-                    updateContent();
-                }
-            });
+            startLookupTimer();
         }
-        updateContent();
         ExplorerUtils.activateActions(manager, true);
     }
 
     @Override
     public void panelDeactivated() { 
+        stopLookupTimer();
+            
         if(null != connectedTextComponent)
             connectedTextComponent.getDocument().removeDocumentListener(this);        
         ExplorerUtils.activateActions(manager, false);
@@ -125,7 +121,7 @@ public class BeanShellNavigatorPanel extends JPanel
         final String script = null != connectedTextComponent ? connectedTextComponent.getText() : "";
         try {
             beanTreeView.setRootVisible(false);
-            manager.setRootContext(new RootNode(script));
+            manager.setRootContext(new RootNode(script, connectedTextComponent));
         } catch(Throwable ex) {
             beanTreeView.setRootVisible(true);
             manager.setRootContext(new ErrorNode());
@@ -142,6 +138,31 @@ public class BeanShellNavigatorPanel extends JPanel
                     expandRecursively(view, n);
                 }
             });
+    }
+    
+    private void startLookupTimer() {
+        if(null != lookupTimer)
+            stopLookupTimer();
+        
+        lookupTimer = new Timer();
+        lookupTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                connectedTextComponent = org.netbeans.api.editor.EditorRegistry.lastFocusedComponent();
+                if(null != connectedTextComponent) {
+                    lookupTimer.cancel();
+                    connectedTextComponent.getDocument().addDocumentListener(BeanShellNavigatorPanel.this);
+                    updateContent();
+                }
+            }
+        }, 500, 500);
+    }
+    
+    private void stopLookupTimer() {
+        if(null != lookupTimer) {
+            lookupTimer.cancel();
+            lookupTimer = null;
+        }
     }
     
 }

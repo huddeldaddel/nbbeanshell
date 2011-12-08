@@ -17,6 +17,7 @@ package de.bfg9000.beanshell.navigator;
 
 import bsh.ParseException;
 import bsh.ParserConnector;
+import javax.swing.text.JTextComponent;
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
 
@@ -27,8 +28,8 @@ import org.openide.nodes.Children;
  */
 class RootNode extends AbstractNode {
 
-    public RootNode(String scriptContent) throws ParseException {
-        super(Children.create(new NodeFactory(new ParserConnector().parse(scriptContent)), false));        
+    public RootNode(String scriptContent, JTextComponent connectedComponent) throws ParseException {
+        super(Children.create(new NodeFactory(new ParserConnector().parse(scriptContent), connectedComponent), false));        
     }
 
 }
