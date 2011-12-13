@@ -41,9 +41,24 @@ class MethodNode extends BeanShellNode {
     
     @Override
     public Image getIcon(int type) {
+        if(method.isInterface())
+            return loadIcon(PRFX +"interface.png");
+        
         if(method.isClass())
             return loadIcon(PRFX +"class.png");
-                
+        
+        if(method.isConstructor()) {
+            if(method.getModifiers().contains(BshModifierInfo.Private)) {
+                return loadIcon(PRFX +"constructorPrivate.png");
+            } else if(method.getModifiers().contains(BshModifierInfo.Protected)) {
+                return loadIcon(PRFX +"constructorProtected.png");
+            } else if(method.getModifiers().contains(BshModifierInfo.Public)) {
+                return loadIcon(PRFX +"constructorPublic.png");
+            } else {
+                return loadIcon(PRFX +"constructorPackage.png");
+            }
+        }
+        
         if(method.getModifiers().contains(BshModifierInfo.Private)) {
             return loadIcon(PRFX +(isStatic(method) ? "methodStPrivate.png" : "methodPrivate.png"));
         } else if(method.getModifiers().contains(BshModifierInfo.Protected)) {
@@ -67,8 +82,35 @@ class MethodNode extends BeanShellNode {
     
     private String buildDisplayName() {
         if(method.isClass())
-            return method.getName();
+            return buildClassName();
         
+        return buildMethodName();
+    }
+    
+    private String buildClassName() {
+        final StringBuilder builder = new StringBuilder();
+        builder.append(method.getName());
+        
+        if("Object".equals(method.getSuperClass()) && method.getInterfaces().isEmpty())
+            return builder.toString();
+        
+        builder.append(" :: ");
+        if(!"Object".equals(method.getSuperClass())) {
+            builder.append(method.getSuperClass());
+            if(!method.getInterfaces().isEmpty())
+                builder.append(" : ");
+        }
+        
+        for(int i=0; i<method.getInterfaces().size(); i++) {
+            if(i != 0)
+                builder.append(", ");
+            builder.append(method.getInterfaces().get(i));
+        }
+        
+        return builder.toString();               
+    }
+    
+    private String buildMethodName() {
         final StringBuilder builder = new StringBuilder();
         builder.append(method.getName())
                .append("(");

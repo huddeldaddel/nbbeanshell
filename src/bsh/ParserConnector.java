@@ -66,8 +66,10 @@ public class ParserConnector {
                 final SimpleNode node = parser.popNode();
                 if(isMethod(node)) {
                     result.addMethods(Collections.singleton(buildMethodInfo(node)));
-                } else if(isVariable(node))
+                } else if(isVariable(node)) {
                     result.addVariables(Collections.singleton(buildVariableInfo(node)));
+                } else if(isClass(node))
+                    result.addMethods(Collections.singleton(buildClassInfo(node)));
             }
             removeDuplicateVariables(result.getVariables().iterator());
             removeLooselyTypedOuterVariables(result, getVariableNames(new ArrayList<BshVariableInfo>()));
@@ -76,6 +78,133 @@ public class ParserConnector {
         }
         return result;
     }    
+    
+    //----------------------------------------------------------------------------------------------------------------//
+    // Class handling                                                                                                 //
+    //----------------------------------------------------------------------------------------------------------------//
+    
+    /**
+     * @param node a SimpleNode to be checked
+     * @return {@code true} if the given node is a class declaration
+     */
+    private boolean isClass(SimpleNode node) {
+        return node instanceof BSHClassDeclaration;
+    }
+    
+    /**
+     * @param node node that declares a class
+     * @return a {@code BshMethodInfo} for a class declaration node
+     */
+    private BshMethodInfo buildClassInfo(SimpleNode node) {
+        final BshMethodInfo result = new BshMethodInfo();
+        final BSHClassDeclaration clss = (BSHClassDeclaration) node;
+        
+        result.setLineNumber(node.getLineNumber());
+        result.setName(getClassName(clss));
+        result.setReturnType("void");
+        result.setSuperClass(getSuperClass(clss));
+        result.setInterface(clss.isInterface);
+        result.setClass(true);       
+        result.addInterfaces(getClassInterfaces(clss));
+        result.addModifiers(getClassModifiers(clss));
+        result.addMethods(getClassInnerMethods(clss));
+        result.addVariables(getFields(clss));        
+                
+        identifyConstructors(result, result.getName());
+        return result;
+    }
+    
+    /**
+     * @param node a node that declares a class
+     * @return a {@code List} of {@code BshMethodInfo} objects describing the inner methods of the given node
+     */
+    private List<BshMethodInfo> getClassInnerMethods(BSHClassDeclaration node) {
+        final List<BshMethodInfo> result = new LinkedList<BshMethodInfo>();
+        for(int i=0; i<node.jjtGetNumChildren(); i++) 
+            if(node.getChild(i) instanceof BSHBlock) {
+                final SimpleNode block = node.getChild(i);
+                for(int j=0; j<block.jjtGetNumChildren(); j++) {
+                    final SimpleNode child = block.getChild(j);
+                    if(isMethod(child))
+                        result.add(buildMethodInfo(child));
+                }
+            }
+        return result;
+    }
+    
+    /**
+     * @param node a node that declares a class
+     * @return the modifiers of the given class node
+     */
+    private Set<BshModifierInfo> getClassModifiers(BSHClassDeclaration node) {
+        final Set<BshModifierInfo> result = new HashSet<BshModifierInfo>();
+        final String modifiersAndType = node.getText().substring(0, node.getText().indexOf(getClassName(node)));
+        final StringTokenizer tokenizer = new StringTokenizer(modifiersAndType, " ");
+        while(tokenizer.hasMoreTokens()) {
+            final String token = tokenizer.nextToken().trim();
+            for(BshModifierInfo modifier: BshModifierInfo.values())
+                if(modifier.toString().equals(token))
+                    result.add(modifier);
+        }
+        return result;
+    }
+    
+    /**
+     * @param node a node that declares a class
+     * @return the name of the given class node
+     */
+    private String getClassName(BSHClassDeclaration node) {
+        return node.name;        
+    }
+    
+    /**
+     * Sets the constructor flag on all contained methods that qualify as constructors
+     * 
+     * @param container the container that may contain constructors
+     * @param className the classname of the container
+     */
+    private void identifyConstructors(BshInfoContainer container, String className) {
+        for(BshMethodInfo method: container.methods)
+            method.setConstructor(method.getName().equals(className) && "void".equals(method.getReturnType()));
+    }
+    
+    /**
+     * @param node the class declaration
+     * @return the defined superclass - or "Object"
+     */
+    private String getSuperClass(BSHClassDeclaration node) {
+        final String declaration = node.getText();
+        if(!declaration.contains(" extends "))
+            return "Object";
+        
+        final StringTokenizer tokenizer = new StringTokenizer(declaration);
+        while(tokenizer.hasMoreTokens()) {
+            if("extends".equals(tokenizer.nextToken()) && tokenizer.hasMoreTokens()) {
+                String result = tokenizer.nextToken();
+                if(result.endsWith("{"))
+                    result = result.substring(0, result.length() -1);
+                return result;
+            }
+        }
+            
+        return "Object";
+    }
+     
+    /**
+     * @param clss the class to be inspected
+     * @return the interfaces that are implemented by the given class
+     */
+    private List<String> getClassInterfaces(BSHClassDeclaration clss) {
+        final List<String> result = new LinkedList<String>();
+        if(0 < clss.numInterfaces) 
+            for(int j=0; j<clss.jjtGetNumChildren(); j++) {
+                final SimpleNode child = clss.getChild(j);
+                if(child instanceof BSHAmbiguousName)
+                    result.add(child.getText().trim());
+            }
+        
+        return result;
+    }
     
     //----------------------------------------------------------------------------------------------------------------//
     // Variable handling                                                                                              //
@@ -247,25 +376,6 @@ public class ParserConnector {
     
     /**
      * @param node a node that declares a method
-     * @return a {@code List} of {@code BshMethodInfo} objects describing the inner methods of the given node
-     */
-    private List<BshVariableInfo> getFields(BSHMethodDeclaration node) {
-        final List<BshVariableInfo> result = new LinkedList<BshVariableInfo>();
-        for(int i=0; i<node.jjtGetNumChildren(); i++) 
-            if(node.getChild(i) instanceof BSHBlock) {
-                final SimpleNode block = node.getChild(i);
-                for(int j=0; j<block.jjtGetNumChildren(); j++) {
-                    final SimpleNode child = block.getChild(j);
-                    if(isVariable(child)) 
-                        result.add(buildVariableInfo(child));
-                }
-            }
-        removeDuplicateVariables(result.iterator());
-        return result;
-    }
-    
-    /**
-     * @param node a node that declares a method
      * @return the modifiers of the given method node
      */
     private Set<BshModifierInfo> getMethodModifiers(BSHMethodDeclaration node) {
@@ -341,6 +451,25 @@ public class ParserConnector {
     // Utilities                                                                                                      //
     //----------------------------------------------------------------------------------------------------------------//
     
+    /**
+     * @param node a node that declares a method
+     * @return a {@code List} of {@code BshMethodInfo} objects describing the inner methods of the given node
+     */
+    private List<BshVariableInfo> getFields(SimpleNode node) {
+        final List<BshVariableInfo> result = new LinkedList<BshVariableInfo>();
+        for(int i=0; i<node.jjtGetNumChildren(); i++) 
+            if(node.getChild(i) instanceof BSHBlock) {
+                final SimpleNode block = node.getChild(i);
+                for(int j=0; j<block.jjtGetNumChildren(); j++) {
+                    final SimpleNode child = block.getChild(j);
+                    if(isVariable(child)) 
+                        result.add(buildVariableInfo(child));
+                }
+            }
+        removeDuplicateVariables(result.iterator());
+        return result;
+    }
+    
 //    /**
 //     * Prints the (complete) structure of the given note. The first call should have a prefix of "".
 //     */
@@ -354,8 +483,7 @@ public class ParserConnector {
 //            SimpleNode child = node.getChild(i);
 //            printNode(child, "--" +prefix);
 //        }
-//    }
-    
+//    }    
     
     private Set<String> getVariableNames(Collection<BshVariableInfo> variables) {
         final Set<String> result = new HashSet<String>();
