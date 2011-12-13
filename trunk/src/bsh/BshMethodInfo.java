@@ -29,10 +29,16 @@ public class BshMethodInfo extends BshInfoContainer {
     private String returnType;    
     private int lineNumber;    
     private boolean clazz;
+    private boolean constructor;
+    private String superClass;
+    private List<String> interfaces;
+    private boolean interfaze;
     
     public BshMethodInfo() {
         modifiers = new HashSet<BshModifierInfo>();
         parameters = new LinkedList<BshParameterInfo>();
+        interfaces = new LinkedList<String>();
+        superClass = "Object";
     }
 
     public int getLineNumber() {
@@ -82,5 +88,42 @@ public class BshMethodInfo extends BshInfoContainer {
     public void setClass(boolean clazz) {
         this.clazz = clazz;
     }
-        
+
+    public boolean isConstructor() {
+        return constructor;
+    }
+
+    public void setConstructor(boolean constructor) {
+        this.constructor = constructor;
+    }    
+    
+    public String getSuperClass() {
+        return superClass; 
+    }
+    
+    public void setSuperClass(String superClass) {
+        this.superClass = superClass;
+    }
+    
+    public List<String> getInterfaces() {
+        final List<String> result = new ArrayList<String>(interfaces);
+        final Iterator<String> iterator = result.iterator();
+        while(iterator.hasNext())
+            if(iterator.next().equals(superClass))
+                iterator.remove();
+        return result;
+    }
+
+    public void addInterfaces(Collection<String> interfaces) {
+        this.interfaces.addAll(interfaces);
+    }
+    
+    public boolean isInterface() {
+        return interfaze;
+    }
+    
+    public void setInterface(boolean isInterface) {
+        interfaze = isInterface;
+    }
+    
 }
