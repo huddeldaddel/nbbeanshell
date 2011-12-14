@@ -16,10 +16,8 @@
 package de.bfg9000.beanshell.integration;
 
 import bsh.Interpreter;
-import java.io.IOException;
-import java.io.OutputStream;
+import de.bfg9000.beanshell.util.WriterOutputStream;
 import java.io.PrintStream;
-import java.io.Writer;
 import org.openide.windows.InputOutput;
 
 /**
@@ -34,7 +32,7 @@ class RunAction extends AbstractAction {
     }
 
     @Override
-    protected boolean perform(InputOutput io) {        
+    protected void perform(InputOutput io) {        
         try {
             saveScriptDocument();
                         
@@ -42,48 +40,14 @@ class RunAction extends AbstractAction {
             interpreter.setErr(new PrintStream(new WriterOutputStream(io.getErr())));
             interpreter.setOut(new PrintStream(new WriterOutputStream(io.getOut())));
             interpreter.eval(context.getPrimaryFile().asText());
-            return true;
         } catch(Exception ex) {
             ex.printStackTrace(io.getErr());
-            return false;
         }
     }    
     
     @Override
     protected String getTaskName() {
         return "Run " +context.getPrimaryFile().getName();
-    }
-    
-    /**
-     * Adapter that connects a Writer to an OutputStream.
-     */
-    private static final class WriterOutputStream extends OutputStream {
-
-        private final Writer writer;
-
-        public WriterOutputStream(Writer writer) {
-            this.writer = writer;
-        }
-
-        @Override
-        public void write(int b) throws IOException {
-            write(new byte[] {(byte) b}, 0, 1);
-        }
-
-        @Override
-        public void write(byte b[], int off, int len) throws IOException {
-            writer.write(new String(b, off, len));
-        }
-
-        @Override
-        public void flush() throws IOException {
-            writer.flush();
-        }
-
-        @Override
-        public void close() throws IOException {
-            writer.close();
-        }
     }
 
 }

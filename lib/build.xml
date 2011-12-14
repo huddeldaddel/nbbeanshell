@@ -33,12 +33,9 @@
 	<property name="javadoc-dir" value="javadoc" />
 	<property name="bsf-src-dir" value="bsf/src" />
 	<property name="engine-src-dir" value="engine/src" />
-	<property name="engine-config" 
-		value="engine/config/javax.script.ScriptEngineFactory" />
+	<property name="engine-config" value="engine/config/javax.script.ScriptEngineFactory" />
 	<property name="classgen-src-dir" value="asm/src" />
-
-	<property name="javacc-lib" 
-		value="${lib-dir}/javacc.jar"/>
+	<property name="javacc-lib" value="${lib-dir}/javacc.jar"/>
 
 	<!-- 
 		Optional things you can't build under older versions of Java
@@ -56,28 +53,22 @@
 		value="bsh/JThis.java,bsh/classpath/*,bsh/util/*,bsh/reflect/*,bsh/ExternalNameSpace.java"/>
 	-->
 
-	<!-- Uncomment to build without making the BSF adapter 
-	<property name="exclude-bsf" 
-		value="bsh/util/BeanShellBSFEngine.java,TestBshBSF.java"/>
-	-->
+	<!-- Uncomment to build without making the BSF adapter -->
+	<property name="exclude-bsf" value="bsh/util/BeanShellBSFEngine.java,TestBshBSF.java"/>
 
-	<!-- Uncomment to build without making the javax.script (JSR223) adapter 
+	<!-- Uncomment to build without making the javax.script (JSR223) adapter -->
 	<property name="exclude-engine" value="bsh/engine/**"/>
-	-->
 
 	<!-- Uncomment to build without the ASM class generator code.
 	<property name="exclude-classgen" 
 		value="bsh/org/objectweb/asm/**,bsh/ClassGeneratorImpl.java,bsh/ClassGeneratorUtil.java,bsh/DelayedEvalBshMethod.java"/>
 	-->
 
-	<!-- Uncomment to build without making the servlet package 
-	<property name="exclude-servlet" 
-		value="bsh/servlet/*"/>
-	-->
+	<!-- Uncomment to build without making the servlet package -->
+	<property name="exclude-servlet" value="bsh/servlet/*"/>
 
 	<!-- Legacy excludes.  Comment this *out* to build these legacy items -->
-	<property name="excludes-legacy" 
-		value="bsh/JThis.java"/>
+	<property name="excludes-legacy" value="bsh/JThis.java"/>
 
 	<!-- Arbitrary excludes.  Comment this out to build these experimental or
 		other items which we've decided not to build right now. 
@@ -170,6 +161,7 @@
 			debug="on"
 			includes="**/*.java"
 			excludes="${excludes},**/bak/**"
+                        includeantruntime="false"
 		>
 			<classpath>
 				<fileset refid="lib-fileset"/>
@@ -565,6 +557,13 @@
 		</java>
 	</target>
 
+	<!-- 
+		Builds the full library and exports it to the parent project.
+	-->
+	<target name="run" depends="jarall">
+		<copy file="dist/bsh-2.0b5.jar" tofile="../release/modules/ext/bsh-2.0b5.jar" />
+	</target>
+	
 	<!-- 
 		Run the test suite.
 	-->
