@@ -31,194 +31,196 @@
  *                                                                           *
  *****************************************************************************/
 
-
 package bsh;
+
 /*
-	Note: great care (and lots of typing) were taken to insure that the
-	namespace and interpreter references are passed on the stack and not 
-	(as they were erroneously before) installed in instance variables...
-	Each of these node objects must be re-entrable to allow for recursive 
-	situations.
+ * Note: great care (and lots of typing) were taken to insure that the namespace and interpreter references are passed
+ * on the stack and not (as they were erroneously before) installed in instance variables... Each of these node objects
+ * must be re-entrable to allow for recursive situations.
+ * 
+ * The only data which should really be stored in instance vars here should be parse tree data... features of the node
+ * which should never change (e.g. the number of arguments, etc.)
+ * 
+ * Exceptions would be public fields of simple classes that just publish data produced by the last eval()... data that 
+ * is used immediately. We'll try to remember to mark these as transient to highlight them.
+ */
+public class SimpleNode implements Node {
+    
+    public static SimpleNode JAVACODE = new SimpleNode( -1 ) {
+        @Override
+        public String getSourceFile() {
+            return "<Called from Java Code>";
+        }
 
-	The only data which should really be stored in instance vars here should 
-	be parse tree data... features of the node which should never change (e.g.
-	the number of arguments, etc.)
-	
-	Exceptions would be public fields of simple classes that just publish
-	data produced by the last eval()... data that is used immediately. We'll
-	try to remember to mark these as transient to highlight them.
+        @Override
+        public int getLineNumber() {
+            return -1;
+        }
 
-*/
-class SimpleNode implements Node 
-{
-	public static SimpleNode JAVACODE =
-		new SimpleNode( -1 ) {
-			public String getSourceFile() {
-				return "<Called from Java Code>";
-			}
+        @Override
+        public String getText()  {
+            return "<Compiled Java Code>";
+        }
+    };
 
-			public int getLineNumber() {
-				return -1;
-			}
+    protected Node parent;
+    protected Node[] children;
+    protected int id;
+    Token firstToken, lastToken;
 
-			public String getText()  {
-				return "<Compiled Java Code>";
-			}
-		};
+    /** the source of the text from which this was parsed */
+    String sourceFile;
 
-	protected Node parent;
-	protected Node[] children;
-	protected int id;
-	Token firstToken, lastToken;
+    public SimpleNode(int i) {
+            id = i;
+    }
 
-	/** the source of the text from which this was parsed */
-	String sourceFile;
+    @Override
+    public void jjtOpen() { }
+    
+    @Override
+    public void jjtClose() { }
 
-	public SimpleNode(int i) {
-		id = i;
-	}
+    @Override
+    public void jjtSetParent(Node n) { 
+        parent = n; 
+    }
+    
+    @Override
+    public Node jjtGetParent() { 
+        return parent; 
+    }
 
-	public void jjtOpen() { }
-	public void jjtClose() { }
+    @Override
+    public void jjtAddChild(Node n, int i) {
+        if (children == null)
+            children = new Node[i + 1];
+        else if(i >= children.length) {
+            Node c[] = new Node[i + 1];
+            System.arraycopy(children, 0, c, 0, children.length);
+            children = c;
+        }
+        children[i] = n;
+    }
 
-	public void jjtSetParent(Node n) { parent = n; }
-	public Node jjtGetParent() { return parent; }
-	//public SimpleNode getParent() { return (SimpleNode)parent; }
+    @Override
+    public Node jjtGetChild(int i) { 
+        return children[i]; 
+    }
+    
+    public SimpleNode getChild( int i ) {
+        return (SimpleNode)jjtGetChild(i);
+    }
 
-	public void jjtAddChild(Node n, int i)
-	{
-		if (children == null)
-			children = new Node[i + 1];
-		else
-			if (i >= children.length)
-			{
-				Node c[] = new Node[i + 1];
-				System.arraycopy(children, 0, c, 0, children.length);
-				children = c;
-			}
+    @Override
+    public int jjtGetNumChildren() {
+        return (children == null) ? 0 : children.length;
+    }
 
-		children[i] = n;
-	}
+    /*
+     * You can override these two methods in subclasses of SimpleNode to customize the way the node appears when the 
+     * tree is dumped. If your output uses more than one line you should override toString(String), otherwise overriding
+     * toString() is probably all you need to do.
+    */
+    @Override
+    public String toString() { 
+        return ParserTreeConstants.jjtNodeName[id]; 
+    }
+    
+    public String toString(String prefix) { 
+        return prefix + toString(); 
+    }
 
-	public Node jjtGetChild(int i) { 
-		return children[i]; 
-	}
-	public SimpleNode getChild( int i ) {
-		return (SimpleNode)jjtGetChild(i);
-	}
+    // Override this method if you want to customize how the node dumps out its children.
+    public void dump(String prefix) {
+        System.out.println(toString(prefix));
+        if(children != null) 
+            for(int i = 0; i < children.length; ++i) {
+                final SimpleNode n = (SimpleNode)children[i];
+                if (n != null)
+                    n.dump(prefix + " ");
+                    
+            }
+    }
 
-	public int jjtGetNumChildren() {
-		return (children == null) ? 0 : children.length;
-	}
+    //  ---- BeanShell specific stuff hereafter ----  //
 
-	/*
-		You can override these two methods in subclasses of SimpleNode to
-		customize the way the node appears when the tree is dumped.  If
-		your output uses more than one line you should override
-		toString(String), otherwise overriding toString() is probably all
-		you need to do.
-	*/
-	public String toString() { return ParserTreeConstants.jjtNodeName[id]; }
-	public String toString(String prefix) { return prefix + toString(); }
+    /**
+            Detach this node from its parent.
+            This is primarily useful in node serialization.
+            (see BSHMethodDeclaration)
+    */
+    public void prune() {
+            jjtSetParent( null );
+    }
 
-	/*
-		Override this method if you want to customize how the node dumps
-		out its children.
-	*/
-	public void dump(String prefix)
-	{
-		System.out.println(toString(prefix));
-		if(children != null)
-		{
-			for(int i = 0; i < children.length; ++i)
-			{
-				SimpleNode n = (SimpleNode)children[i];
-				if (n != null)
-				{
-					n.dump(prefix + " ");
-				}
-			}
-		}
-	}
+    /**
+            This is the general signature for evaluation of a node.
+    */
+    public Object eval( CallStack callstack, Interpreter interpreter ) 
+            throws EvalError
+    {
+            throw new InterpreterError(
+                    "Unimplemented or inappropriate for " + getClass().getName() );
+    }
 
-	//  ---- BeanShell specific stuff hereafter ----  //
+    /**
+            Set the name of the source file (or more generally source) of
+            the text from which this node was parsed.
+    */
+    public void setSourceFile( String sourceFile ) {
+            this.sourceFile = sourceFile;
+    }
 
-	/**
-		Detach this node from its parent.
-		This is primarily useful in node serialization.
-		(see BSHMethodDeclaration)
-	*/
-	public void prune() {
-		jjtSetParent( null );
-	}
+    /**
+            Get the name of the source file (or more generally source) of
+            the text from which this node was parsed.
+            This will recursively search up the chain of parent nodes until
+            a source is found or return a string indicating that the source
+            is unknown.
+    */
+    public String getSourceFile() {
+            if ( sourceFile == null )
+                    if ( parent != null )
+                            return ((SimpleNode)parent).getSourceFile();
+                    else
+                            return "<unknown file>";
+            else
+                    return sourceFile;
+    }
 
-	/**
-		This is the general signature for evaluation of a node.
-	*/
-	public Object eval( CallStack callstack, Interpreter interpreter ) 
-		throws EvalError
-	{
-		throw new InterpreterError(
-			"Unimplemented or inappropriate for " + getClass().getName() );
-	}
+    /**
+            Get the line number of the starting token
+    */
+    public int getLineNumber() {
+            return firstToken.beginLine;
+    }
 
-	/**
-		Set the name of the source file (or more generally source) of
-		the text from which this node was parsed.
-	*/
-	public void setSourceFile( String sourceFile ) {
-		this.sourceFile = sourceFile;
-	}
+    /**
+            Get the ending line number of the starting token
+    public int getEndLineNumber() {
+            return lastToken.endLine;
+    }
+    */
 
-	/**
-		Get the name of the source file (or more generally source) of
-		the text from which this node was parsed.
-		This will recursively search up the chain of parent nodes until
-		a source is found or return a string indicating that the source
-		is unknown.
-	*/
-	public String getSourceFile() {
-		if ( sourceFile == null )
-			if ( parent != null )
-				return ((SimpleNode)parent).getSourceFile();
-			else
-				return "<unknown file>";
-		else
-			return sourceFile;
-	}
+    /**
+            Get the text of the tokens comprising this node.
+    */
+    public String getText() 
+    {
+            StringBuffer text = new StringBuffer();
+            Token t = firstToken;
+            while ( t!=null ) {
+                    text.append(t.image);
+                    if ( !t.image.equals(".") )
+                            text.append(" ");
+                    if ( t==lastToken ||
+                            t.image.equals("{") || t.image.equals(";") )
+                            break;
+                    t=t.next;
+            }
 
-	/**
-		Get the line number of the starting token
-	*/
-	public int getLineNumber() {
-		return firstToken.beginLine;
-	}
-
-	/**
-		Get the ending line number of the starting token
-	public int getEndLineNumber() {
-		return lastToken.endLine;
-	}
-	*/
-
-	/**
-		Get the text of the tokens comprising this node.
-	*/
-	public String getText() 
-	{
-		StringBuffer text = new StringBuffer();
-		Token t = firstToken;
-		while ( t!=null ) {
-			text.append(t.image);
-			if ( !t.image.equals(".") )
-				text.append(" ");
-			if ( t==lastToken ||
-				t.image.equals("{") || t.image.equals(";") )
-				break;
-			t=t.next;
-		}
-			
-		return text.toString();
-	}
+            return text.toString();
+    }
 }
 

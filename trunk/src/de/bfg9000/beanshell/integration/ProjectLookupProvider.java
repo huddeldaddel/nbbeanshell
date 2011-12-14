@@ -21,7 +21,7 @@ import org.openide.util.Lookup;
 import org.openide.util.lookup.Lookups;
 
 /**
- * Adds support for the "Run File (Shift-F6)" Action for BeanShell scripts to J2SE projects.
+ * Adds support for various actions related to BeanShell scripts to J2SE projects.
  *
  * @author Thomas Werner
  */
@@ -34,12 +34,14 @@ public class ProjectLookupProvider implements LookupProvider {
         if(null != actionProvider)
             return Lookups.fixed(new WrappingActionProvider(actionProvider));
         
-        return Lookups.fixed(new StandaloneRunActionProvider(), new StandaloneCompileActionProvider());
+        return Lookups.fixed(new StandaloneCompileActionProvider(),
+                             new StandaloneDebugActionProvider(),
+                             new StandaloneRunActionProvider());
     }
 
     /**
-     * This class adds the "run.single" action to the predefined actions of the project. It therefore wrapps the 
-     * existing action provider of the project. This setup is the preferred way up to NetBeans version 7.0.
+     * This class adds the actions to the predefined actions of the project. It therefore wrapps the existing action
+     * provider of the project. This setup is the preferred way up to NetBeans version 7.0.
      */
     private static class WrappingActionProvider implements ActionProvider {
 
@@ -61,10 +63,13 @@ public class ProjectLookupProvider implements LookupProvider {
                 return;
             }
 
-            if("compile.single".equals(command))
+            if(ActionProvider.COMMAND_COMPILE_SINGLE.equals(command))
                 new Thread(new CompileAction(context.lookup(BeanShellDataObject.class))).start();
             
-            if("run.single".equals(command))
+            if(ActionProvider.COMMAND_DEBUG_SINGLE.equals(command))
+                new Thread(new DebugAction(context.lookup(BeanShellDataObject.class))).start();
+            
+            if(ActionProvider.COMMAND_RUN_SINGLE.equals(command))
                 new Thread(new RunAction(context.lookup(BeanShellDataObject.class))).start();
         }
 
@@ -77,53 +82,80 @@ public class ProjectLookupProvider implements LookupProvider {
     }
     
     /**
-     * This class provides the "run.single" action. This very basic setup is the preferred way since NetBeans version 
-     * 7.1.
+     * This very basic setup is the preferred way since NetBeans version 7.1.
      */
-    private static final class StandaloneRunActionProvider implements ActionProvider {
-
-        private final String COMMAND = "run.single";
+    private static abstract class AbstractBeanShellActionProvider implements ActionProvider {
+        
+        private final String command;
+        
+        public AbstractBeanShellActionProvider(String command) {
+            this.command = command;
+        }
         
         @Override
         public String[] getSupportedActions() {
-            return new String[] {COMMAND};
+            return new String[] {command};
         }
 
+        protected abstract AbstractAction getAction(Lookup context);
+        
         @Override
         public void invokeAction(String command, Lookup context) throws IllegalArgumentException {
-            if((null != context.lookup(BeanShellDataObject.class)) && (COMMAND.equals(command)))
-                new Thread(new RunAction(context.lookup(BeanShellDataObject.class))).start();
+            if((null != context.lookup(BeanShellDataObject.class)) && command.equals(command))
+                new Thread(getAction(context)).start();
         }
 
         @Override
         public boolean isActionEnabled(String command, Lookup context) throws IllegalArgumentException {
             return null != context.lookup(BeanShellDataObject.class);
+        }
+        
+    }
+    
+    /**
+     * This class provides the "run single" action.
+     */
+    private static final class StandaloneRunActionProvider extends AbstractBeanShellActionProvider {
+
+        public StandaloneRunActionProvider() {
+            super(ActionProvider.COMMAND_RUN_SINGLE);
+        }
+        
+        @Override
+        protected AbstractAction getAction(Lookup context) {
+            return new RunAction(context.lookup(BeanShellDataObject.class));
         }
 
     }
     
     /**
-     * This class provides the "run.single" action. This very basic setup is the preferred way since NetBeans version 
-     * 7.1.
+     * This class provides the "compile single" action.
      */
-    private static final class StandaloneCompileActionProvider implements ActionProvider {
+    private static final class StandaloneCompileActionProvider extends AbstractBeanShellActionProvider {
 
-        private final String COMMAND = "compile.single";
+        public StandaloneCompileActionProvider() {
+            super(ActionProvider.COMMAND_COMPILE_SINGLE);
+        }
         
         @Override
-        public String[] getSupportedActions() {
-            return new String[] {COMMAND};
+        protected AbstractAction getAction(Lookup context) {
+            return new CompileAction(context.lookup(BeanShellDataObject.class));
         }
 
-        @Override
-        public void invokeAction(String command, Lookup context) throws IllegalArgumentException {
-            if((null != context.lookup(BeanShellDataObject.class)) && (COMMAND.equals(command)))
-                new Thread(new CompileAction(context.lookup(BeanShellDataObject.class))).start();
-        }
+    }
+    
+    /**
+     * This class provides the "debug single" action.
+     */
+    private static final class StandaloneDebugActionProvider extends AbstractBeanShellActionProvider {
 
+        public StandaloneDebugActionProvider() {
+            super(ActionProvider.COMMAND_DEBUG_SINGLE);
+        }
+        
         @Override
-        public boolean isActionEnabled(String command, Lookup context) throws IllegalArgumentException {
-            return null != context.lookup(BeanShellDataObject.class);
+        protected AbstractAction getAction(Lookup context) {
+            return new DebugAction(context.lookup(BeanShellDataObject.class));
         }
 
     }

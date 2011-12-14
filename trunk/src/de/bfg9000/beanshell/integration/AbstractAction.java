@@ -40,17 +40,17 @@ public abstract class AbstractAction implements Runnable {
         final ProgressHandle progress = ProgressHandleFactory.createHandle(getTaskName());
         progress.start();
         try {
-            performAction();
+            performAction(true);
         } finally {
             progress.finish();
         }
     }
     
-    protected abstract boolean perform(InputOutput io) throws Throwable;
+    protected abstract void perform(InputOutput io) throws Throwable;
     
     protected abstract String getTaskName(); 
     
-    private void performAction() {
+    protected void performAction(boolean writeToLog) {
         long beginTime = System.currentTimeMillis();
         final InputOutput io = IOProvider.getDefault().getIO("BeanShell", false);
         io.select();
@@ -58,11 +58,13 @@ public abstract class AbstractAction implements Runnable {
             io.getOut().reset();
             perform(io);
             long endTime = System.currentTimeMillis();
-            writeEndMessage(io.getOut(), true, endTime -beginTime);             
+            if(writeToLog)
+                writeEndMessage(io.getOut(), true, endTime -beginTime);             
         } catch(Throwable ex) {
-            io.getErr().println(ex.toString());
+            io.getErr().println(ex.toString());            
             long endTime = System.currentTimeMillis();
-            writeEndMessage(io.getOut(), false, endTime -beginTime);
+            if(writeToLog)
+                writeEndMessage(io.getOut(), false, endTime -beginTime);
         } finally {
             io.getErr().close();
             io.getOut().close();

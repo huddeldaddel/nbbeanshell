@@ -15,54 +15,36 @@
  */
 package de.bfg9000.beanshell.integration;
 
-import bsh.Parser;
-import java.io.IOException;
-import java.io.InputStream;
+import bsh.Interpreter;
+import de.bfg9000.beanshell.debugger.Debugger;
+import de.bfg9000.beanshell.util.WriterOutputStream;
+import java.io.PrintStream;
 import org.openide.windows.InputOutput;
 
 /**
- * Action that parses the current script file. BeanShell scripts are not compiled. So this action just uses the Parser
- * to find syntax errors.
- *
+ * Action that starts the BeanShell debugger.
+ * 
  * @author Thomas Werner
  */
-class CompileAction extends AbstractAction {
+public class DebugAction extends AbstractAction {
 
-    public CompileAction(BeanShellDataObject context) {
+    public DebugAction(BeanShellDataObject context) {
         super(context);
-    }
-
-    @Override
-    protected void perform(InputOutput io) {
-        InputStream iStream = null;
-        
-        try {
-            saveScriptDocument();
-            
-            iStream = context.getPrimaryFile().getInputStream();
-            final Parser parser = new Parser(iStream);
-            parser.setRetainComments(true);
-            
-            io.getOut().println("Parsing BeanShell file: " +context.getPrimaryFile().getPath());
-            try {
-                while(!parser.Line())
-                    io.getOut().println(parser.popNode());
-                io.getOut().println("Finished parsing. No errors have been found!");
-            } catch(Error err) {
-                io.getErr().println(err.getMessage());
-            }
-        } catch(Exception ex) {
-            ex.printStackTrace(io.getErr());
-        } finally {
-            try {
-                iStream.close();
-            } catch (IOException ex) { }
-        }
     }
     
     @Override
+    protected void perform(InputOutput io) throws Throwable {
+        try {
+            saveScriptDocument();
+            Debugger.startDebugger();
+        } catch(Exception ex) {
+            ex.printStackTrace(io.getErr());
+        }        
+    }
+
+    @Override
     protected String getTaskName() {
-        return "Compile " +context.getPrimaryFile().getName();
+        return "Debug " +context.getPrimaryFile().getName();
     }
     
 }

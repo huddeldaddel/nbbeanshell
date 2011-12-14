@@ -35,7 +35,6 @@ package bsh;
 
 import java.io.*;
 import java.net.*;
-import java.text.*;
 /**
 	Remote executor class. Posts a script from the command line to a BshServlet
  	or embedded  interpreter using (respectively) HTTP or the bsh telnet
@@ -146,7 +145,7 @@ public class Remote
 	static String doHttp( String postURL, String text )
 	{
 		String returnValue = null;
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append( "bsh.client=Remote" );
 		sb.append( "&bsh.script=" );
 		sb.append( URLEncoder.encode( text ) );
@@ -204,7 +203,7 @@ public class Remote
 	static String getFile( String name )
 		throws FileNotFoundException, IOException
 	{
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		BufferedReader bin = new BufferedReader( new FileReader( name ) );
 		String line;
 		while ( (line=bin.readLine()) != null )
