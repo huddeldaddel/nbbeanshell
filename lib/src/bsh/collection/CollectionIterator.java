@@ -1,11 +1,7 @@
 package bsh.collection;
 
-import java.util.Iterator;
 import java.util.Collection;
-import java.util.Enumeration;
-//import java.util.Map;
-
-import java.lang.reflect.Array;
+import java.util.Iterator;
 
 /**
  *	This is the implementation of:

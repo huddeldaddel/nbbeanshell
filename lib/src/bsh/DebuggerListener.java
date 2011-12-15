@@ -20,41 +20,12 @@
  **********************************************************************************************************************/
 package bsh;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-
 /**
  *
  * @author Thomas Werner
  */
-public abstract class BshInfoContainer {
-    
-    protected List<BshMethodInfo> methods = new LinkedList<BshMethodInfo>();
-    protected List<BshVariableInfo> variables = new LinkedList<BshVariableInfo>();
-    
-    public List<BshMethodInfo> getMethods() {
-        return methods;
-    }
+public interface DebuggerListener {
 
-    public void addMethods(Collection<BshMethodInfo> methodInfos) {
-        methods.addAll(methodInfos);
-    }
-
-    public List<BshVariableInfo> getVariables() {
-        return variables;
-    }
-
-    public void addVariables(Collection<BshVariableInfo> variableInfos) {
-        variables.addAll(variableInfos);
-    }
-    
-    public List<BshMethodInfo> getClasses() {
-        final List<BshMethodInfo> result = new LinkedList<BshMethodInfo>();
-        for(BshMethodInfo method: methods)
-            if(method.isClass())
-                result.add(method);
-        return result;
-    }
+    public abstract void debuggerStopped(DebugEvent event);
     
 }
