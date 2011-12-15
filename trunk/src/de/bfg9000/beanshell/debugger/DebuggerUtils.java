@@ -1,18 +1,18 @@
-/*
- * nbBeanShell -- a integration of BeanShell into the NetBeans IDE
- * Copyright (C) 2011 Thomas Werner
- *
- * This library is free software; you can redistribute it and/or modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any
- * later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with this library; if not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- */
+/*********************************************************************************************************************** 
+ *  nbBeanShell -- a integration of BeanShell into the NetBeans IDE.                                                    *
+ *  Copyright (C) 2011 Thomas Werner                                                                                   *
+ *                                                                                                                     *
+ *  This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public  *
+ *  License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any     *
+ *  later version.                                                                                                     *
+ *                                                                                                                     *
+ *  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied *
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more       *
+ *  details.                                                                                                           *
+ *                                                                                                                     *
+ *  You should have received a copy of the GNU General Public License along with this program.  If not, see            *
+ *  <http://www.gnu.org/licenses/>.                                                                                    *
+ **********************************************************************************************************************/
 package de.bfg9000.beanshell.debugger;
 
 import javax.swing.JEditorPane;
@@ -28,9 +28,12 @@ import org.openide.text.NbDocument;
 import org.openide.windows.TopComponent;
 
 /**
- * Taken largely from jean-yves Mengant's org.netbeans.modules.python.debugger.Utils in the python.debugger module.
- * TODO: Code has to be refacatored - Utils are ugly.
+ * Based on the class {@code org.sodbeans.debugger.DebuggerUtils} from the SodBeans project that has been written by 
+ * Andreas Stefik. The code has been taken largely from jean-yves Mengant's org.netbeans.modules.python.debugger.Utils
+ * in the python.debugger module.
  * 
+ * @author Jean-Yves Mengant
+ * @author Andreas Stefik
  * @author Thomas Werner
  */
 public class DebuggerUtils {
@@ -51,9 +54,9 @@ public class DebuggerUtils {
             return null;
         }
         Node n = nodes[0];
-        FileObject fo = (FileObject) n.getLookup().lookup(FileObject.class);
+        FileObject fo = n.getLookup().lookup(FileObject.class);
         if (fo == null) {
-            DataObject dobj = (DataObject) n.getLookup().lookup(DataObject.class);
+            DataObject dobj = n.getLookup().lookup(DataObject.class);
             if (dobj != null) {
                 fo = dobj.getPrimaryFile();
             }
@@ -64,11 +67,11 @@ public class DebuggerUtils {
         if (!isBeanShellSource(fo)) {
             return null;
         }
-        LineCookie lineCookie = (LineCookie) n.getCookie(LineCookie.class);
+        LineCookie lineCookie = n.getCookie(LineCookie.class);
         if (lineCookie == null) {
             return null;
         }
-        EditorCookie editorCookie = (EditorCookie) n.getCookie(EditorCookie.class);
+        EditorCookie editorCookie = n.getCookie(EditorCookie.class);
         if (editorCookie == null) {
             return null;
         }
@@ -103,9 +106,9 @@ public class DebuggerUtils {
             return null;
         }
         Node n = nodes[0];
-        FileObject fo = (FileObject) n.getLookup().lookup(FileObject.class);
+        FileObject fo = n.getLookup().lookup(FileObject.class);
         if (fo == null) {
-            DataObject dobj = (DataObject) n.getLookup().lookup(DataObject.class);
+            DataObject dobj = n.getLookup().lookup(DataObject.class);
             if (dobj != null) {
                 fo = dobj.getPrimaryFile();
             }
@@ -138,10 +141,10 @@ public class DebuggerUtils {
      * @return
      */
     private static JEditorPane getEditorPane(EditorCookie editorCookie) {
-        JEditorPane[] op = editorCookie.getOpenedPanes();
-        if ((op == null) || (op.length < 1)) {
+        final JEditorPane[] op = editorCookie.getOpenedPanes();
+        if((op == null) || (op.length < 1))
             return null;
-        }
+
         return op[0];
     }
 }

@@ -20,41 +20,49 @@
  **********************************************************************************************************************/
 package bsh;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.EventObject;
 
 /**
  *
  * @author Thomas Werner
  */
-public abstract class BshInfoContainer {
+public class DebugEvent extends EventObject {
     
-    protected List<BshMethodInfo> methods = new LinkedList<BshMethodInfo>();
-    protected List<BshVariableInfo> variables = new LinkedList<BshVariableInfo>();
-    
-    public List<BshMethodInfo> getMethods() {
-        return methods;
-    }
-
-    public void addMethods(Collection<BshMethodInfo> methodInfos) {
-        methods.addAll(methodInfos);
-    }
-
-    public List<BshVariableInfo> getVariables() {
-        return variables;
-    }
-
-    public void addVariables(Collection<BshVariableInfo> variableInfos) {
-        variables.addAll(variableInfos);
+    public static enum Type {
+        Stopped,
+        Finished;
     }
     
-    public List<BshMethodInfo> getClasses() {
-        final List<BshMethodInfo> result = new LinkedList<BshMethodInfo>();
-        for(BshMethodInfo method: methods)
-            if(method.isClass())
-                result.add(method);
-        return result;
+    private final Type type;
+    private final int line;
+    private final String file;
+    
+    /**
+     * Creates a new instance of the DebugEvent class.
+     * @param source the debugger that fired the event
+     */
+    public DebugEvent(Debugger source, Type type, int line, String file) {
+        super(source);
+        this.type = type;
+        this.line = line;
+        this.file = file;
+    }
+    
+    @Override
+    public Debugger getSource() {
+        return (Debugger) super.getSource();
+    }
+
+    public String getFile() {
+        return file;
+    }
+
+    public int getLine() {
+        return line;
+    }
+    
+    public Type getType() {
+        return type;
     }
     
 }

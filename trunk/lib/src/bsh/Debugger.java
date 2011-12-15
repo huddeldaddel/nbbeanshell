@@ -2,19 +2,33 @@ package bsh;
 
 import java.io.PrintStream;
 import java.io.Reader;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
- * A basic interface for a debugger
+ * A debugger that executes BeanShell scripts line by line
  * 
  * @author Thomas Werner
  */
 public class Debugger extends Interpreter {
     
+    private static enum CommandResult { Ok, Break, Cancel }
+    
+    private List<DebuggerListener> listeners = new LinkedList<DebuggerListener>();    
+    private final BreakpointProvider breakpointProvider;
+    
+    private SimpleNode parkedNode;          // node to be handled next
+    private Object nodeStatus = null;       // status of the parkedNode
+    private Debugger localInterpreter;
+    private CallStack callstack;
+    private boolean endOfFile = false;
+    
     /**
      * Create a debugger for external use.
      */
-    public Debugger() {
+    public Debugger(BreakpointProvider breakpointProvider) {
         super();
+        this.breakpointProvider = breakpointProvider;
     }
     
     /**
@@ -28,98 +42,176 @@ public class Debugger extends Interpreter {
      *                       this interpreter is reading... used for debugging.  May be null.
      */
     private Debugger(Reader in, PrintStream out, PrintStream err, boolean interactive, NameSpace namespace,
-                     Interpreter parent, String sourceFileInfo) {
+                     Interpreter parent, String sourceFileInfo, BreakpointProvider breakpointProvider) {
         super(in, out, err, interactive, namespace, parent, sourceFileInfo);
+        this.breakpointProvider = breakpointProvider;
     }    
     
+    public void addDebuggerListener(DebuggerListener listener) {
+        listeners.add(listener);
+    }
+    
+    public void removeDebuggerListener(DebuggerListener listener) {
+        listeners.remove(listener);
+    }
+    
+    private void setDebuggerListeners(List<DebuggerListener> listeners) {
+        this.listeners = listeners;
+    }
+    
     /**
-     * Spawn a non-interactive local interpreter to evaluate text in the specified namespace. Return value is the 
+     * Spawn a non-interactive local debugger to evaluate text in the specified namespace. Return value is the 
      * evaluated object (or corresponding primitive wrapper).
      * 
-     * @param sourceFileInfo is for information purposes only.  It is used to display error messages (and in the future 
-     *                       may be made available to the script).
+     * @param sourceFileInfo identifies the script in the BreakpointContainer
      * @throws EvalError on script problems
      * @throws TargetError on unhandled exceptions from the script
      */
-    //Note: we need a form of eval that passes the callstack through...
-    /*
-     * Can't this be combined with run()? run seems to have stuff in it for interactive vs. non-interactive...
-     * compare them side by side and see what they do differently, aside from the exception handling.
-     */
-    public Object debug(Reader in, String sourceFileInfo) throws EvalError {
-        Object retVal = null;
-
-        /* 
-         * Create non-interactive local interpreter for this namespace with source from the input stream and out/err 
-         * same as this interpreter.
-         */
-        Debugger localInterpreter = new Debugger(in, out, err, false, globalNameSpace, this, sourceFileInfo);
-	CallStack callstack = new CallStack(globalNameSpace);
-
-        boolean eof = false;
-        while(!eof) {
-            SimpleNode node = null;
+    public void debug(Reader in, String sourceFileInfo) throws EvalError {
+        localInterpreter = new Debugger(in, out, err, false, globalNameSpace, this, sourceFileInfo, breakpointProvider);
+        localInterpreter.setDebuggerListeners(listeners);
+	callstack = new CallStack(globalNameSpace);
+        endOfFile = false;
+        
+        boolean stopped = false;
+        while(!endOfFile) {
+            SimpleNode currentNode = null;
+            boolean executed = false;
             try {
-                eof = localInterpreter.Line();
-                if(localInterpreter.get_jjtree().nodeArity() > 0) {
-                    node = (SimpleNode)localInterpreter.get_jjtree().rootNode();
-                    node.setSourceFile(sourceFileInfo);
-                    
-                    retVal = node.eval(callstack, localInterpreter);
-
-                    // sanity check during development
-                    if(callstack.depth() > 1)
-                        throw new InterpreterError("Callstack growing: "+callstack);
-
-                    if(retVal instanceof ReturnControl) {
-                        retVal = ((ReturnControl)retVal).value;
-                        break; // non-interactive, return control now
+                currentNode = getNextNode();
+                if(currentNode != null) {
+                    final CommandResult result = executeCommand(currentNode);
+                    switch(result) {
+                        case Break:
+                            fireStopped(currentNode.getLineNumber());
+                            break;
+                        case Cancel:
+                            executed = true;
+                            stopped = true;
+                            break;
+                        case Ok:
+                            break;
                     }
-
-                    if(localInterpreter.showResults && retVal != Primitive.VOID)
-                        println("<" + retVal + ">");
                 }
-            } catch(ParseException e) {
-                if(DEBUG) // show extra "expecting..." info
-                    error( e.getMessage(DEBUG) );
-
-                // add the source file info and throw again
-                e.setErrorSourceFile( sourceFileInfo );
-                throw e;
-
-            } catch ( InterpreterError e ) {
-                e.printStackTrace();
-                throw new EvalError("Sourced file: "+sourceFileInfo+" internal Error: " + e.getMessage(), node, callstack);
-            } catch ( TargetError e ) {
-                // failsafe, set the Line as the origin of the error.
-                if(e.getNode()==null)
-                    e.setNode( node );
-                e.reThrow("Sourced file: "+sourceFileInfo);
-            } catch ( EvalError e) {
-                if(DEBUG)
-                    e.printStackTrace();
-                // failsafe, set the Line as the origin of the error.
-                if(e.getNode()==null)
-                    e.setNode( node );
-                e.reThrow("Sourced file: "+sourceFileInfo);
-            } catch(Exception e) {
-                if(DEBUG)
-                    e.printStackTrace();
-                throw new EvalError("Sourced file: "+sourceFileInfo+" unknown error: " + e.getMessage(), node, callstack);
-            } catch(TokenMgrError e) {
-                throw new EvalError("Sourced file: "+sourceFileInfo+" Token Parsing Error: " + e.getMessage(), node, callstack );
+            } catch(Throwable t) {
+                handleException(currentNode, t);
             } finally {
-                localInterpreter.get_jjtree().reset();
-
-                // reinit the callstack
-                if(callstack.depth() > 1 ) {
-                    callstack.clear();
-                    callstack.push(globalNameSpace);
-                }
+                if(executed)
+                    cleanUp();
             }
         }
         
-        return Primitive.unwrap(retVal);
+        if(endOfFile || stopped)
+            fireFinished();
+    }    
+    
+    /**
+     * Fired when a node has been reached - but not executed yet. We will execute it and stop at the next node.
+     * 
+     * @throws EvalError on script problems
+     * @throws TargetError on unhandled exceptions from the script
+     */
+    public void stepOver() throws EvalError {
+//        try {
+//            if(node != null) {
+//                boolean stopped = false;
+//                if(!executeCommand(node) || endOfFile) {
+//                    stopped = true;
+//                    fireFinished();
+//                }
+//                cleanUp();
+//            
+//                if(!stopped) {
+//                    node = getNextNode();
+//                    if(null != node) {
+//                        fireStopped(node.getLineNumber());
+//                    } else
+//                        fireFinished();
+//                }
+//            }
+//        } catch(Throwable t) {
+//            handleException(node, t);
+//        }
+    }
+    
+    void parkNode(SimpleNode nodeToPark, Object nodeStatus) {
+        this.parkedNode = nodeToPark;
+        this.nodeStatus = nodeStatus;
+        fireStopped(parkedNode.getLineNumber());
+    }
+    
+    /**
+     * @return {@code false} if the script is to be stopped
+     * @throws EvalError on script problems
+     * @throws TargetError on unhandled exceptions from the script 
+     */
+    private CommandResult executeCommand(SimpleNode node) throws EvalError {
+        final Object returnValue = node.eval(callstack, localInterpreter);
+        if(this.parkedNode == node)
+            return CommandResult.Break;
+        return (returnValue instanceof ReturnControl) ? CommandResult.Cancel : CommandResult.Ok;
+    }    
+    
+    private void fireFinished() {
+        final DebugEvent event = new DebugEvent(this, DebugEvent.Type.Finished, 0, sourceFileInfo);
+        for(DebuggerListener listener: listeners)
+            listener.debuggerStopped(event);
+    }
+    
+    private void fireStopped(int line) {
+        final DebugEvent event = new DebugEvent(this, DebugEvent.Type.Stopped, line, sourceFileInfo);
+        for(DebuggerListener listener: listeners)
+            listener.debuggerStopped(event);
+    }
+    
+    private SimpleNode getNextNode() throws EvalError {
+        SimpleNode result = null;
+        try {
+            endOfFile = localInterpreter.Line();
+            if(localInterpreter.get_jjtree().nodeArity() > 0) {
+                result = (SimpleNode)localInterpreter.get_jjtree().rootNode();
+                result.setSourceFile(sourceFileInfo);
+            }
+        } catch(ParseException ex) {
+            ex.setErrorSourceFile(sourceFileInfo);
+            throw ex;
+        }
+        return result;
+    }
+    
+    private void handleException(SimpleNode node, Throwable throwable) throws EvalError {
+        if(throwable instanceof InterpreterError) {
+            throwable.printStackTrace(err);
+            throw new EvalError(sourceFileInfo+": internal Error: " + throwable.getMessage(), node, callstack);
+        }
+        
+        if(throwable instanceof TargetError) {
+            TargetError e = (TargetError) throwable;
+            if(e.getNode()==null)
+                e.setNode(node);
+            e.reThrow(sourceFileInfo);
+        }
+        
+        if(throwable instanceof EvalError) {
+            EvalError e = (EvalError) throwable;
+            if(e.getNode()==null)
+                e.setNode(node);
+            e.reThrow(sourceFileInfo);
+        }
+        
+        if(throwable instanceof Exception) 
+            throw new EvalError(sourceFileInfo+": unknown error: " + throwable.getMessage(), node, callstack);
+        
+        if(throwable instanceof TokenMgrError) 
+            throw new EvalError(sourceFileInfo+": Token Parsing Error: " + throwable.getMessage(), node, callstack);
+    }
+    
+    private void cleanUp() {
+        localInterpreter.get_jjtree().reset();
+        if(callstack.depth() > 1) {
+            callstack.clear();
+            callstack.push(globalNameSpace);
+        }
     }
     
 }

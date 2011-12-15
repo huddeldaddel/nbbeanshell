@@ -1,26 +1,30 @@
-/*
- * nbBeanShell -- a integration of BeanShell into the NetBeans IDE
- * Copyright (C) 2011 Thomas Werner
- *
- * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
- * Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any
- * later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
- * details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
- */
+/*********************************************************************************************************************** 
+ *  nbBeanShell -- a integration of BeanShell into the NetBeans IDE.                                                    *
+ *  Copyright (C) 2011 Thomas Werner                                                                                   *
+ *                                                                                                                     *
+ *  This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public  *
+ *  License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any     *
+ *  later version.                                                                                                     *
+ *                                                                                                                     *
+ *  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied *
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more       *
+ *  details.                                                                                                           *
+ *                                                                                                                     *
+ *  You should have received a copy of the GNU General Public License along with this program.  If not, see            *
+ *  <http://www.gnu.org/licenses/>.                                                                                    *
+ **********************************************************************************************************************/
 package de.bfg9000.beanshell.debugger;
 
+import bsh.DebugEvent;
+import bsh.DebuggerListener;
+import bsh.EvalError;
 import de.bfg9000.beanshell.integration.AbstractAction;
 import de.bfg9000.beanshell.util.WriterOutputStream;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.Set;
+import javax.swing.SwingUtilities;
 import org.netbeans.api.debugger.DebuggerInfo;
 import org.netbeans.api.debugger.DebuggerManager;
 import org.netbeans.spi.debugger.ActionsProviderSupport;
@@ -30,11 +34,12 @@ import org.netbeans.spi.debugger.SessionProvider;
 import org.openide.windows.InputOutput;
 
 /**
- * This class houses the primary implementation of the BeanShell debugger.
+ * This class houses the primary implementation of the BeanShell debugger. Based on a tutorial written by Andreas 
+ * Stefik (http://netbeans.dzone.com/how-reuse-netbeans-debugger).
  * 
  * @author Thomas Werner
  */
-public class Debugger extends ActionsProviderSupport {
+public class Debugger extends ActionsProviderSupport implements DebuggerListener {
     
     /** Action constant for Step Over Action. */
     public static final Object ACTION_STEP_OVER = "stepOver";
@@ -76,7 +81,8 @@ public class Debugger extends ActionsProviderSupport {
     public static final Object ACTION_TOGGLE_BREAKPOINT = "toggleBreakpoint";
 
     private final EngineProvider engineProvider;
-    private final bsh.Debugger debugger = new bsh.Debugger();
+    private final bsh.Debugger debugger = new bsh.Debugger(BreakpointContainer.Instance);
+    private final ProgramCounterAnnotationUpdater pcUpdater = new ProgramCounterAnnotationUpdater();
     private static final Set actions = new HashSet();
 
     public static final String BEANSHELL_DEBUGGER_INFO = "BeanShellDebuggerInfo";
@@ -88,6 +94,9 @@ public class Debugger extends ActionsProviderSupport {
         engineProvider = (EngineProvider) contextProvider.lookupFirst(null, DebuggerEngineProvider.class);
         for(Object action: actions)
             setEnabled(action, true);
+        
+        debugger.addDebuggerListener(this);
+        debugger.addDebuggerListener(pcUpdater);
     }
 
     /**
@@ -127,12 +136,18 @@ public class Debugger extends ActionsProviderSupport {
         } else if(action == ACTION_REWIND) {
         } else if(action == ACTION_KILL) {
             engineProvider.getDestructor().killEngine();
+            pcUpdater.removeAnnotation();
         } else if(action == ACTION_PAUSE) {
         } else if(action == ACTION_CONTINUE) {
         } else if(action == ACTION_START) {
             new ScriptRunner().performAction(false);
         } else if(action == ACTION_STEP_INTO) {
         } else if(action == ACTION_STEP_OVER) {
+            try {
+                debugger.stepOver();
+            } catch(EvalError ee) {
+                System.out.println(ee);
+            }
         } else if(action == ACTION_RUN_TO_CURSOR) {
         }
         
@@ -140,8 +155,19 @@ public class Debugger extends ActionsProviderSupport {
     }
 
     @Override
-    public Set getActions() {
+    public Set<Object> getActions() {
         return actions;
+    }
+
+    @Override
+    public void debuggerStopped(DebugEvent de) {
+        if(de.getType() == DebugEvent.Type.Finished)
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    doAction(ACTION_KILL);
+                }
+            });
     }
     
     private static final class BeanShellSessionProvider extends SessionProvider {
