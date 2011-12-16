@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -21,20 +21,19 @@
  **********************************************************************************************************************/
 package bsh;
 
-class BSHStatementExpressionList extends SimpleNode
-{
-	BSHStatementExpressionList(int id) { super(id); }
+class BSHStatementExpressionList extends SimpleNode {
 
-	public Object eval(CallStack callstack, Interpreter interpreter)  
-		throws EvalError
-	{
-		int n = jjtGetNumChildren();
-		for(int i=0; i<n; i++)
-		{
-			SimpleNode node = ((SimpleNode)jjtGetChild(i));
-			node.eval(callstack, interpreter);
-		}
-		return Primitive.VOID;
-	}
+    BSHStatementExpressionList(int id) {
+        super(id);
+    }
+
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        int n = jjtGetNumChildren();
+        for(int i = 0; i < n; i++) {
+            SimpleNode node = ((SimpleNode) jjtGetChild(i));
+            node.eval(callstack, interpreter, null);
+        }
+        return Primitive.VOID;
+    }
 }
-

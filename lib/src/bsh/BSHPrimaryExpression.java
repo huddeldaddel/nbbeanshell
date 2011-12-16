@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -31,7 +31,15 @@ class BSHPrimaryExpression extends SimpleNode {
      * Evaluate to a value object.
      */
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        if(interpreter instanceof Debugger) {
+            final Debugger debugger = (Debugger) interpreter;
+            if(debugger.isBreakpoint(this)) {
+                debugger.parkNode(this, null);
+                return null;
+            }
+        }
+        
         return eval(false, callstack, interpreter);
     }
 
@@ -76,7 +84,7 @@ class BSHPrimaryExpression extends SimpleNode {
             if (toLHS) {// is this right?
                 throw new EvalError("Can't assign to prefix.", this, callstack);
             } else {
-                obj = ((SimpleNode) obj).eval(callstack, interpreter);
+                obj = ((SimpleNode) obj).eval(callstack, interpreter, null);
             }
         }
 

@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -70,14 +70,14 @@ public class DelayedEvalBshMethod extends BshMethod {
 
     @Override
     public Class getReturnType() {
-        if (returnTypeNode == null) {
+        if(returnTypeNode == null) {
             return null;
         }
 
         // BSHType will cache the type for us
         try {
             return returnTypeNode.evalReturnType(callstack, interpreter);
-        } catch (EvalError e) {
+        } catch(EvalError e) {
             throw new InterpreterError("can't eval return type: " + e);
         }
     }
@@ -90,8 +90,8 @@ public class DelayedEvalBshMethod extends BshMethod {
     public Class[] getParameterTypes() {
         // BSHFormalParameters will cache the type for us
         try {
-            return (Class[]) paramTypesNode.eval(callstack, interpreter);
-        } catch (EvalError e) {
+            return (Class[]) paramTypesNode.eval(callstack, interpreter, null);
+        } catch(EvalError e) {
             throw new InterpreterError("can't eval param types: " + e);
         }
     }

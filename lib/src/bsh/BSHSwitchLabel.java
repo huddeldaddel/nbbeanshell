@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -22,16 +22,19 @@
 package bsh;
 
 class BSHSwitchLabel extends SimpleNode {
-	boolean isDefault;
+    
+    boolean isDefault;
 
-	public BSHSwitchLabel(int id) { super(id); }
+    public BSHSwitchLabel(int id) { 
+        super(id); 
+    }
 
-	public Object eval(
-		CallStack callstack, Interpreter interpreter) throws EvalError
-	{
-		if ( isDefault )
-			return null; // should probably error
-		SimpleNode label = ((SimpleNode)jjtGetChild(0));
-		return label.eval( callstack, interpreter );
-	}
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        if(isDefault)
+            return null; // should probably error
+        SimpleNode label = ((SimpleNode)jjtGetChild(0));
+        return label.eval(callstack, interpreter, null);
+    }
+    
 }

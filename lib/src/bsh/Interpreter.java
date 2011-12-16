@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -387,7 +387,7 @@ public class Interpreter implements Runnable, ConsoleInterface, Serializable {
                         node.dump(">");
                     }
 
-                    Object ret = node.eval(callstack, this);
+                    Object ret = node.eval(callstack, this, null);
 
                     // sanity check during development
                     if (callstack.depth() > 1) {
@@ -542,7 +542,7 @@ public class Interpreter implements Runnable, ConsoleInterface, Serializable {
                         println("// " + node.getText());
                     }
 
-                    retVal = node.eval(callstack, localInterpreter);
+                    retVal = node.eval(callstack, localInterpreter, null);
 
                     // sanity check during development
                     if (callstack.depth() > 1) {

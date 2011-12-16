@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -22,26 +22,24 @@
 package bsh;
 
 /**
-	This class needs logic to prevent the right hand side of boolean logical
-	expressions from being naively evaluated...  e.g. for "foo && bar" bar 
-	should not be evaluated in the case where foo is true.
-*/
+ * This class needs logic to prevent the right hand side of boolean logical expressions from being naively evaluated...
+ * e.g. for "foo && bar" bar should not be evaluated in the case where foo is true.
+ */
 class BSHTernaryExpression extends SimpleNode {
 
-    BSHTernaryExpression(int id) { super(id); }
-
-    public Object eval( CallStack callstack, Interpreter interpreter) 
-		throws EvalError
-    {
-        SimpleNode
-			cond = (SimpleNode)jjtGetChild(0),
-			evalTrue = (SimpleNode)jjtGetChild(1),
-			evalFalse = (SimpleNode)jjtGetChild(2);
-
-		if ( BSHIfStatement.evaluateCondition( cond, callstack, interpreter ) )
-			return evalTrue.eval( callstack, interpreter );
-		else
-			return evalFalse.eval( callstack, interpreter );
+    BSHTernaryExpression(int id) {
+        super(id);
     }
 
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        final SimpleNode cond = (SimpleNode) jjtGetChild(0);
+        final SimpleNode evalTrue = (SimpleNode) jjtGetChild(1);
+        final SimpleNode evalFalse = (SimpleNode) jjtGetChild(2);
+
+        if(BSHIfStatement.evaluateCondition(cond, callstack, interpreter))
+            return evalTrue.eval(callstack, interpreter, null);
+        
+        return evalFalse.eval(callstack, interpreter, null);
+    }
 }

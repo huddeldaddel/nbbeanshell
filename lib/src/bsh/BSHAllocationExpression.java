@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -35,7 +35,7 @@ class BSHAllocationExpression extends SimpleNode {
     private static int innerClassCount = 0;
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
         // type is either a class name or a primitive type
         SimpleNode type = (SimpleNode) jjtGetChild(0);
 

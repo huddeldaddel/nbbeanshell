@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -22,41 +22,37 @@
 package bsh;
 
 /**
-	A formal parameter declaration.
-	For loose variable declaration type is null.
-*/
-class BSHFormalParameter extends SimpleNode
-{
-	public static final Class UNTYPED = null;
-	public String name;
-	// unsafe caching of type here
-	public Class type;
+ * A formal parameter declaration. For loose variable declaration type is null.
+ */
+class BSHFormalParameter extends SimpleNode {
 
-	BSHFormalParameter(int id) { super(id); }
+    public static final Class UNTYPED = null;
+    public String name;
+    // unsafe caching of type here
+    public Class type;
 
-	public String getTypeDescriptor( 
-		CallStack callstack, Interpreter interpreter, String defaultPackage ) 
-	{
-		if ( jjtGetNumChildren() > 0 )
-			return ((BSHType)jjtGetChild(0)).getTypeDescriptor( 
-				callstack, interpreter, defaultPackage );
-		else
-			// this will probably not get used
-			return "Ljava/lang/Object;";  // Object type
-	}
+    BSHFormalParameter(int id) {
+        super(id);
+    }
 
-	/**
-		Evaluate the type.
-	*/
-	public Object eval( CallStack callstack, Interpreter interpreter) 
-		throws EvalError
-	{
-		if ( jjtGetNumChildren() > 0 )
-			type = ((BSHType)jjtGetChild(0)).getType( callstack, interpreter );
-		else
-			type = UNTYPED;
+    public String getTypeDescriptor(CallStack callstack, Interpreter interpreter, String defaultPackage) {
+        if(jjtGetNumChildren() > 0) 
+            return ((BSHType) jjtGetChild(0)).getTypeDescriptor(callstack, interpreter, defaultPackage);
+        
+        return "Ljava/lang/Object;";  // Object type
+    }
 
-		return type;
-	}
+    /**
+     * Evaluate the type.
+     */
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        if(jjtGetNumChildren() > 0) {
+            type = ((BSHType) jjtGetChild(0)).getType(callstack, interpreter);
+        } else {
+            type = UNTYPED;
+        }
+
+        return type;
+    }
 }
-

@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -28,25 +28,24 @@ class BSHIfStatement extends SimpleNode {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
         Object ret = null;
 
         if(evaluateCondition((SimpleNode) jjtGetChild(0), callstack, interpreter)) {   // if
-            ret = ((SimpleNode) jjtGetChild(1)).eval(callstack, interpreter);
+            ret = ((SimpleNode) jjtGetChild(1)).eval(callstack, interpreter, null);
         } else if(jjtGetNumChildren() > 2) {                                           // else
-            ret = ((SimpleNode) jjtGetChild(2)).eval(callstack, interpreter);
+            ret = ((SimpleNode) jjtGetChild(2)).eval(callstack, interpreter, null);
         }
 
-        if(ret instanceof ReturnControl) {
+        if(ret instanceof ReturnControl)
             return ret;
-        }
 
         return Primitive.VOID;
     }
 
     public static boolean evaluateCondition(SimpleNode condExp, CallStack callstack, Interpreter interpreter)
                           throws EvalError {
-        Object obj = condExp.eval(callstack, interpreter);
+        Object obj = condExp.eval(callstack, interpreter, null);
         if(obj instanceof Primitive) {
             if(obj == Primitive.VOID) 
                 throw new EvalError("Condition evaluates to void type", condExp, callstack);

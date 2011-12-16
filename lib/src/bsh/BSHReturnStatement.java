@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -21,22 +21,23 @@
  **********************************************************************************************************************/
 package bsh;
 
-class BSHReturnStatement extends SimpleNode implements ParserConstants
-{
-	public int kind;
+class BSHReturnStatement extends SimpleNode implements ParserConstants {
 
-	BSHReturnStatement(int id) { super(id); }
+    public int kind;
 
-	public Object eval(CallStack callstack, Interpreter interpreter)  
-		throws EvalError
-	{
-		Object value;
-		if(jjtGetNumChildren() > 0)
-			value = ((SimpleNode)jjtGetChild(0)).eval(callstack, interpreter);
-		else
-			value = Primitive.VOID;
+    BSHReturnStatement(int id) {
+        super(id);
+    }
 
-		return new ReturnControl( kind, value, this );
-	}
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        Object value;
+        if(jjtGetNumChildren() > 0) {
+            value = ((SimpleNode) jjtGetChild(0)).eval(callstack, interpreter, null);
+        } else {
+            value = Primitive.VOID;
+        }
+
+        return new ReturnControl(kind, value, this);
+    }
 }
-
