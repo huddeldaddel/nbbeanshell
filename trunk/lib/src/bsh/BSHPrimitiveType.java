@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -21,11 +21,15 @@
  **********************************************************************************************************************/
 package bsh;
 
-class BSHPrimitiveType extends SimpleNode
-{
-	public Class type;
+class BSHPrimitiveType extends SimpleNode {
 
-	BSHPrimitiveType(int id) { super(id); }
-	public Class getType() { return type; }
+    public Class type;
+
+    BSHPrimitiveType(int id) {
+        super(id);
+    }
+
+    public Class getType() {
+        return type;
+    }
 }
-

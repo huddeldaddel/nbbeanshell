@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -34,7 +34,7 @@ import java.util.*;
 import java.net.URL;
 
 /**
- * This is	a simple template engine. An instance of SimpleTemplate wraps a StringBuffer and performs replace operations
+ * This is a simple template engine. An instance of SimpleTemplate wraps a StringBuffer and performs replace operations
  * on one or more parameters embedded as HMTL style comments. The value can then be retrieved as a String or written to
  * a stream.
  *

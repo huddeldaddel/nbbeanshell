@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -21,23 +21,21 @@
  **********************************************************************************************************************/
 package bsh;
 
-class BSHThrowStatement extends SimpleNode
-{
-	BSHThrowStatement(int id) { super(id); }
+class BSHThrowStatement extends SimpleNode {
 
-	public Object eval( CallStack callstack, Interpreter interpreter)  
-		throws EvalError
-	{
-		Object obj = ((SimpleNode)jjtGetChild(0)).eval(callstack, interpreter);
+    BSHThrowStatement(int id) {
+        super(id);
+    }
 
-		// need to loosen this to any throwable... do we need to handle
-		// that in interpreter somewhere?  check first...
-		if(!(obj instanceof Exception))
-			throw new EvalError("Expression in 'throw' must be Exception type",
-				this, callstack );
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        Object obj = ((SimpleNode) jjtGetChild(0)).eval(callstack, interpreter, null);
 
-		// wrap the exception in a TargetException to propogate it up
-		throw new TargetError( (Exception)obj, this, callstack );
-	}
+        // need to loosen this to any throwable... do we need to handle that in interpreter somewhere?  check first...
+        if(!(obj instanceof Exception))
+            throw new EvalError("Expression in 'throw' must be Exception type", this, callstack);
+        
+        // wrap the exception in a TargetException to propogate it up
+        throw new TargetError((Exception) obj, this, callstack);
+    }
 }
-

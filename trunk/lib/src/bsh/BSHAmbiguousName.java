@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -21,74 +21,60 @@
  **********************************************************************************************************************/
 package bsh;
 
-class BSHAmbiguousName extends SimpleNode
-{
+class BSHAmbiguousName extends SimpleNode {
+
     public String text;
 
-    BSHAmbiguousName(int id) { super(id); }
-	
-    public Name getName( NameSpace namespace )
-    {
-        return namespace.getNameResolver( text );
+    BSHAmbiguousName(int id) {
+        super(id);
     }
 
-    public Object toObject( CallStack callstack, Interpreter interpreter ) 
-		throws EvalError
-    {
-		return toObject( callstack, interpreter, false );
+    public Name getName(NameSpace namespace) {
+        return namespace.getNameResolver(text);
     }
 
-    Object toObject( 
-		CallStack callstack, Interpreter interpreter, boolean forceClass ) 
-		throws EvalError
-    {
-		try {
-        	return 
-				getName( callstack.top() ).toObject( 
-					callstack, interpreter, forceClass );
-		} catch ( UtilEvalError e ) {
-//e.printStackTrace();
-			throw e.toEvalError( this, callstack );
-		}
+    public Object toObject(CallStack callstack, Interpreter interpreter) throws EvalError {
+        return toObject(callstack, interpreter, false);
     }
 
-    public Class toClass( CallStack callstack, Interpreter interpreter ) 
-		throws EvalError
-    {
-		try {
-        	return getName( callstack.top() ).toClass();
-		} catch ( ClassNotFoundException e ) {
-			throw new EvalError( e.getMessage(), this, callstack );
-		} catch ( UtilEvalError e2 ) {
-			// ClassPathException is a type of UtilEvalError
-			throw e2.toEvalError( this, callstack );
-		}
+    Object toObject(CallStack callstack, Interpreter interpreter, boolean forceClass) throws EvalError {
+        try {
+            return getName(callstack.top()).toObject(callstack, interpreter, forceClass);
+        } catch(UtilEvalError e) {
+            //e.printStackTrace();
+            throw e.toEvalError(this, callstack);
+        }
     }
 
-    public LHS toLHS( CallStack callstack, Interpreter interpreter)
-		throws EvalError
-    {
-		try {
-			return getName( callstack.top() ).toLHS( callstack, interpreter );
-		} catch ( UtilEvalError e ) {
-			throw e.toEvalError( this, callstack );
-		}
+    public Class toClass(CallStack callstack, Interpreter interpreter) throws EvalError {
+        try {
+            return getName(callstack.top()).toClass();
+        } catch(ClassNotFoundException e) {
+            throw new EvalError(e.getMessage(), this, callstack);
+        } catch(UtilEvalError e2) {
+            // ClassPathException is a type of UtilEvalError
+            throw e2.toEvalError(this, callstack);
+        }
     }
 
-	/*
-		The interpretation of an ambiguous name is context sensitive.
-		We disallow a generic eval( ).
-	*/
-    public Object eval( CallStack callstack, Interpreter interpreter ) 
-		throws EvalError
-    {
-		throw new InterpreterError( 
-			"Don't know how to eval an ambiguous name!"
-			+"  Use toObject() if you want an object." );
+    public LHS toLHS(CallStack callstack, Interpreter interpreter) throws EvalError {
+        try {
+            return getName(callstack.top()).toLHS(callstack, interpreter);
+        } catch(UtilEvalError e) {
+            throw e.toEvalError(this, callstack);
+        }
     }
 
-	public String toString() {
-		return "AmbigousName: "+text;
-	}
+    /*
+     * The interpretation of an ambiguous name is context sensitive. We disallow a generic eval( ).
+     */
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        throw new InterpreterError("Don't know how to eval an ambiguous name! Use toObject() if you want an object.");
+    }
+
+    @Override
+    public String toString() {
+        return "AmbigousName: " + text;
+    }
 }
-

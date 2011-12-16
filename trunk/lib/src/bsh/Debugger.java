@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A debugger that executes BeanShell scripts line by line
+ * A debugger that executes BeanShell scripts node by node.
  * 
  * @author Thomas Werner
  */
@@ -19,6 +19,10 @@ public class Debugger extends Interpreter {
     
     private SimpleNode parkedNode;          // node to be handled next
     private Object nodeStatus = null;       // status of the parkedNode
+    
+    private boolean stepByStep = false;     // step through the code => all lines are breakpoints
+    private SimpleNode lastNode = null;     // node that be just stopped at
+    
     private Debugger localInterpreter;
     private CallStack callstack;
     private boolean endOfFile = false;
@@ -68,28 +72,34 @@ public class Debugger extends Interpreter {
      * @throws TargetError on unhandled exceptions from the script
      */
     public void debug(Reader in, String sourceFileInfo) throws EvalError {
+        this.sourceFileInfo = sourceFileInfo;
+        
         localInterpreter = new Debugger(in, out, err, false, globalNameSpace, this, sourceFileInfo, breakpointProvider);
         localInterpreter.setDebuggerListeners(listeners);
 	callstack = new CallStack(globalNameSpace);
         endOfFile = false;
         
         boolean stopped = false;
-        while(!endOfFile) {
+        while(!(endOfFile || stopped)) {
             SimpleNode currentNode = null;
             boolean executed = false;
             try {
                 currentNode = getNextNode();
                 if(currentNode != null) {
-                    final CommandResult result = executeCommand(currentNode);
+                    final CommandResult result = executeCommand(currentNode, null);
                     switch(result) {
                         case Break:
+                            executed = false;
+                            stopped = false;
                             fireStopped(currentNode.getLineNumber());
-                            break;
+                            return;
                         case Cancel:
                             executed = true;
                             stopped = true;
                             break;
                         case Ok:
+                            executed = true;
+                            stopped = false;
                             break;
                     }
                 }
@@ -112,6 +122,14 @@ public class Debugger extends Interpreter {
      * @throws TargetError on unhandled exceptions from the script
      */
     public void stepOver() throws EvalError {
+        final SimpleNode node = localInterpreter.parkedNode;
+        final Object resumeStatus = localInterpreter.nodeStatus;
+        
+        localInterpreter.parkedNode = null;
+        localInterpreter.nodeStatus = null;
+        
+        final CommandResult result = executeCommand(node, resumeStatus);
+        
 //        try {
 //            if(node != null) {
 //                boolean stopped = false;
@@ -134,20 +152,30 @@ public class Debugger extends Interpreter {
 //        }
     }
     
+    //- Interface used by nodes - will be called in localInterpreter ---------------------------------------------------
+    
     void parkNode(SimpleNode nodeToPark, Object nodeStatus) {
         this.parkedNode = nodeToPark;
         this.nodeStatus = nodeStatus;
+        this.lastNode = nodeToPark;
         fireStopped(parkedNode.getLineNumber());
     }
+    
+    boolean isBreakpoint(SimpleNode node) {
+        return (node != lastNode) && 
+               (stepByStep || breakpointProvider.isBreakpoint(node.getLineNumber(), node.getSourceFile()));
+    }
+    
+    //- End of interface used by nodes ---------------------------------------------------------------------------------
     
     /**
      * @return {@code false} if the script is to be stopped
      * @throws EvalError on script problems
      * @throws TargetError on unhandled exceptions from the script 
      */
-    private CommandResult executeCommand(SimpleNode node) throws EvalError {
-        final Object returnValue = node.eval(callstack, localInterpreter);
-        if(this.parkedNode == node)
+    private CommandResult executeCommand(SimpleNode node, Object nodeStatus) throws EvalError {
+        final Object returnValue = node.eval(callstack, localInterpreter, nodeStatus);
+        if(localInterpreter.parkedNode == node)
             return CommandResult.Break;
         return (returnValue instanceof ReturnControl) ? CommandResult.Cancel : CommandResult.Ok;
     }    

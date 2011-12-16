@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -30,7 +30,7 @@ class BSHArrayInitializer extends SimpleNode {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
         throw new EvalError("Array initializer has no base type.", this, callstack);
     }
 
@@ -60,7 +60,7 @@ class BSHArrayInitializer extends SimpleNode {
                 }
                 currentInitializer = ((BSHArrayInitializer) node).eval(baseType, dimensions -1, callstack, interpreter);
             } else {
-                currentInitializer = node.eval(callstack, interpreter);
+                currentInitializer = node.eval(callstack, interpreter, null);
             }
 
             if (currentInitializer == Primitive.VOID) {

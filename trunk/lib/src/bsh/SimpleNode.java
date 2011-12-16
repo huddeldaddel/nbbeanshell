@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -146,15 +146,12 @@ class SimpleNode implements Node {
 
     /**
      * This is the general signature for evaluation of a node.
+     * 
+     * @param callstack the call stack for this node
+     * @param interpreter the interpreter to be used
+     * @param resumeStatus status of this node when is was parked in the debugger (or null)
      */
-    public Object eval(CallStack callstack, Interpreter interpreter) throws EvalError {
-        throw new InterpreterError("Unimplemented or inappropriate for " + getClass().getName());
-    }
-    
-    /**
-     * This is the general signature for resumed evaluation of a node.
-     */
-    public Object resume(CallStack callstack, Interpreter interpreter, Object status) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
         throw new InterpreterError("Unimplemented or inappropriate for " + getClass().getName());
     }
 
@@ -163,6 +160,8 @@ class SimpleNode implements Node {
      */
     public void setSourceFile(String sourceFile) {
         this.sourceFile = sourceFile;
+        for(int i =0; i<jjtGetNumChildren(); i++)
+            getChild(i).setSourceFile(sourceFile);
     }
 
     /**
@@ -185,27 +184,21 @@ class SimpleNode implements Node {
     public int getLineNumber() {
         return firstToken.beginLine;
     }
-
-    /**
-     * Get the ending line number of the starting token public int getEndLineNumber() { return lastToken.endLine; }
-     */
+    
     /**
      * Get the text of the tokens comprising this node.
      */
     public String getText() {
-        StringBuilder text = new StringBuilder();
+        final StringBuilder text = new StringBuilder();
         Token t = firstToken;
-        while (t != null) {
+        while(t != null) {
             text.append(t.image);
-            if (!t.image.equals(".")) {
+            if(!t.image.equals(".")) 
                 text.append(" ");
-            }
-            if (t == lastToken || t.image.equals("{") || t.image.equals(";")) {
-                break;
-            }
+            if(t == lastToken || t.image.equals("{") || t.image.equals(";")) 
+                break;            
             t = t.next;
         }
-
         return text.toString();
     }
 }

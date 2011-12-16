@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -21,116 +21,116 @@
  **********************************************************************************************************************/
 package bsh;
 
-class BSHBlock extends SimpleNode
-{
-	public boolean isSynchronized = false;
+class BSHBlock extends SimpleNode {
 
-	BSHBlock(int id) { super(id); }
+    public boolean isSynchronized = false;
 
-	public Object eval( CallStack callstack, Interpreter interpreter) 
-		throws EvalError
-	{
-		return eval( callstack, interpreter, false );
-	}
+    BSHBlock(int id) {
+        super(id);
+    }
 
-	/**
-		@param overrideNamespace if set to true the block will be executed
-		in the current namespace (not a subordinate one).
-		<p>
-		If true *no* new BlockNamespace will be swapped onto the stack and 
-		the eval will happen in the current
-		top namespace.  This is used by BshMethod, TryStatement, etc.  
-		which must intialize the block first and also for those that perform 
-		multiple passes in the same block.
-	*/
-	public Object eval( 
-		CallStack callstack, Interpreter interpreter, 
-		boolean overrideNamespace ) 
-		throws EvalError
-	{
-		Object syncValue = null;
-		if ( isSynchronized ) 
-		{
-			// First node is the expression on which to sync
-			SimpleNode exp = ((SimpleNode)jjtGetChild(0));
-			syncValue = exp.eval(callstack, interpreter);
-		}
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        return eval(callstack, interpreter, false);
+    }
 
-		Object ret;
-		if ( isSynchronized ) // Do the actual synchronization
-			synchronized( syncValue )
-			{
-				ret = evalBlock( 
-					callstack, interpreter, overrideNamespace, null/*filter*/);
-			}
-		else
-				ret = evalBlock( 
-					callstack, interpreter, overrideNamespace, null/*filter*/);
+    /**
+     * @param overrideNamespace if set to true the block will be executed in the current namespace (not a subordinate
+     * one). <p> If true *no* new BlockNamespace will be swapped onto the stack and the eval will happen in the current
+     * top namespace. This is used by BshMethod, TryStatement, etc. which must intialize the block first and also for
+     * those that perform multiple passes in the same block.
+     */
+    public Object eval(
+            CallStack callstack, Interpreter interpreter,
+            boolean overrideNamespace)
+            throws EvalError {
+        Object syncValue = null;
+        if(isSynchronized) {
+            // First node is the expression on which to sync
+            SimpleNode exp = ((SimpleNode) jjtGetChild(0));
+            syncValue = exp.eval(callstack, interpreter, null);
+        }
 
-		return ret;
-	}
+        Object ret;
+        if(isSynchronized) // Do the actual synchronization
+        {
+            synchronized (syncValue) {
+                ret = evalBlock(
+                        callstack, interpreter, overrideNamespace, null/*
+                         * filter
+                         */);
+            }
+        } else {
+            ret = evalBlock(
+                    callstack, interpreter, overrideNamespace, null/*
+                     * filter
+                     */);
+        }
 
-	Object evalBlock( 
-		CallStack callstack, Interpreter interpreter, 
-		boolean overrideNamespace, NodeFilter nodeFilter ) 
-		throws EvalError
-	{	
-		Object ret = Primitive.VOID;
-		NameSpace enclosingNameSpace = null;
-		if ( !overrideNamespace ) 
-		{
-			enclosingNameSpace= callstack.top();
-			BlockNameSpace bodyNameSpace = 
-				new BlockNameSpace( enclosingNameSpace );
+        return ret;
+    }
 
-			callstack.swap( bodyNameSpace );
-		}
+    Object evalBlock(
+            CallStack callstack, Interpreter interpreter,
+            boolean overrideNamespace, NodeFilter nodeFilter)
+            throws EvalError {
+        Object ret = Primitive.VOID;
+        NameSpace enclosingNameSpace = null;
+        if(!overrideNamespace) {
+            enclosingNameSpace = callstack.top();
+            BlockNameSpace bodyNameSpace =
+                    new BlockNameSpace(enclosingNameSpace);
 
-		int startChild = isSynchronized ? 1 : 0;
-		int numChildren = jjtGetNumChildren();
+            callstack.swap(bodyNameSpace);
+        }
 
-		try {
-			/*
-				Evaluate block in two passes: 
-				First do class declarations then do everything else.
-			*/
-			for(int i=startChild; i<numChildren; i++)
-			{
-				SimpleNode node = ((SimpleNode)jjtGetChild(i));
+        int startChild = isSynchronized ? 1 : 0;
+        int numChildren = jjtGetNumChildren();
 
-				if ( nodeFilter != null && !nodeFilter.isVisible( node ) )
-					continue;
+        try {
+            /*
+             * Evaluate block in two passes: First do class declarations then do everything else.
+             */
+            for(int i = startChild; i < numChildren; i++) {
+                SimpleNode node = ((SimpleNode) jjtGetChild(i));
 
-				if ( node instanceof BSHClassDeclaration )
-					node.eval( callstack, interpreter );
-			}
-			for(int i=startChild; i<numChildren; i++)
-			{
-				SimpleNode node = ((SimpleNode)jjtGetChild(i));
-				if ( node instanceof BSHClassDeclaration )
-					continue;
+                if(nodeFilter != null && !nodeFilter.isVisible(node)) {
+                    continue;
+                }
 
-				// filter nodes
-				if ( nodeFilter != null && !nodeFilter.isVisible( node ) )
-					continue;
+                if(node instanceof BSHClassDeclaration) {
+                    node.eval(callstack, interpreter, null);
+                }
+            }
+            for(int i = startChild; i < numChildren; i++) {
+                SimpleNode node = ((SimpleNode) jjtGetChild(i));
+                if(node instanceof BSHClassDeclaration) {
+                    continue;
+                }
 
-				ret = node.eval( callstack, interpreter );
+                // filter nodes
+                if(nodeFilter != null && !nodeFilter.isVisible(node)) {
+                    continue;
+                }
 
-				// statement or embedded block evaluated a return statement
-				if ( ret instanceof ReturnControl )
-					break;
-			}
-		} finally {
-			// make sure we put the namespace back when we leave.
-			if ( !overrideNamespace ) 
-				callstack.swap( enclosingNameSpace );
-		}
-		return ret;
-	}
+                ret = node.eval(callstack, interpreter, null);
 
-	public interface NodeFilter {
-		public boolean isVisible( SimpleNode node );
-	}
+                // statement or embedded block evaluated a return statement
+                if(ret instanceof ReturnControl) {
+                    break;
+                }
+            }
+        } finally {
+            // make sure we put the namespace back when we leave.
+            if(!overrideNamespace) {
+                callstack.swap(enclosingNameSpace);
+            }
+        }
+        return ret;
+    }
 
+    public interface NodeFilter {
+
+        public boolean isVisible(SimpleNode node);
+    }
 }
-

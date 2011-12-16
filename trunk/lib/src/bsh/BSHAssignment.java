@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -29,7 +29,8 @@ class BSHAssignment extends SimpleNode implements ParserConstants {
         super(id);
     }
 
-    public Object eval(CallStack callstack, Interpreter interpreter) throws EvalError {
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
         BSHPrimaryExpression lhsNode = (BSHPrimaryExpression) jjtGetChild(0);
 
         if (lhsNode == null) {
@@ -63,7 +64,7 @@ class BSHAssignment extends SimpleNode implements ParserConstants {
         // if ( rhsNode instanceof BSHBlock )
         //    rsh =
         // else
-        rhs = rhsNode.eval(callstack, interpreter);
+        rhs = rhsNode.eval(callstack, interpreter, null);
 
         if (rhs == Primitive.VOID) {
             throw new EvalError("Void assignment.", this, callstack);

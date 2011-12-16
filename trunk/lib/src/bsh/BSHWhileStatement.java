@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -22,65 +22,59 @@
 package bsh;
 
 /**
-	This class handles both while(){} statements and do{}while() statements.
-*/
-class BSHWhileStatement extends SimpleNode implements ParserConstants
-{
-	public boolean isDoStatement;
+ * This class handles both while(){} statements and do{}while() statements.
+ */
+class BSHWhileStatement extends SimpleNode implements ParserConstants {
 
-    BSHWhileStatement(int id) { super(id); }
+    public boolean isDoStatement;
 
-    public Object eval( CallStack callstack, Interpreter interpreter)  
-		throws EvalError
-    {
-		int numChild = jjtGetNumChildren();
+    BSHWhileStatement(int id) {
+        super(id);
+    }
 
-		// Order of body and condition is swapped for do / while
+    @Override
+    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+        int numChild = jjtGetNumChildren();
+
+        // Order of body and condition is swapped for do / while
         SimpleNode condExp, body = null;
 
-		if ( isDoStatement ) {
-			condExp = (SimpleNode)jjtGetChild(1);
-			body =(SimpleNode)jjtGetChild(0);
-		} else {
-			condExp = (SimpleNode)jjtGetChild(0);
-			if ( numChild > 1 )	// has body, else just for side effects
-				body =(SimpleNode)jjtGetChild(1);
-		}
+        if(isDoStatement) {
+            condExp = (SimpleNode) jjtGetChild(1);
+            body = (SimpleNode) jjtGetChild(0);
+        } else {
+            condExp = (SimpleNode) jjtGetChild(0);
+            if(numChild > 1) // has body, else just for side effects
+                body = (SimpleNode) jjtGetChild(1);
+        }
 
-		boolean doOnceFlag = isDoStatement;
-        while( 
-			doOnceFlag || 
-			BSHIfStatement.evaluateCondition(condExp, callstack, interpreter )
-		)
-		{
-			if ( body == null ) // no body?
-				continue;
+        boolean doOnceFlag = isDoStatement;
+        while(doOnceFlag || BSHIfStatement.evaluateCondition(condExp, callstack, interpreter)) {
+            if(body == null) // no body?
+                continue;
 
-			Object ret = body.eval(callstack, interpreter);
+            Object ret = body.eval(callstack, interpreter, null);
 
-			boolean breakout = false;
-			if(ret instanceof ReturnControl)
-			{
-				switch(((ReturnControl)ret).kind )
-				{
-					case RETURN:
-						return ret;
+            boolean breakout = false;
+            if(ret instanceof ReturnControl) {
+                switch(((ReturnControl) ret).kind) {
+                    case RETURN:
+                        return ret;
 
-					case CONTINUE:
-						continue;
+                    case CONTINUE:
+                        continue;
 
-					case BREAK:
-						breakout = true;
-						break;
-				}
-			}
-			if(breakout)
-				break;
+                    case BREAK:
+                        breakout = true;
+                        break;
+                }
+            }
+            if(breakout)
+                break;
 
-			doOnceFlag = false;
-		}
+            doOnceFlag = false;
+        }
 
         return Primitive.VOID;
     }
-
 }

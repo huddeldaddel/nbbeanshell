@@ -11,7 +11,7 @@
  *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
  *  more details.                                                                                                      *
  *                                                                                                                     *
- *  You should have received a copy of the GNU General Public License along with this program.                         *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
  *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
  *                                                                                                                     *
  *  Patrick Niemeyer (pat@pat.net)                                                                                     *
@@ -21,33 +21,28 @@
  **********************************************************************************************************************/
 package bsh;
 
-class BSHReturnType extends SimpleNode
-{
-	public boolean isVoid;
+class BSHReturnType extends SimpleNode {
 
-	BSHReturnType(int id) { super(id); }
+    public boolean isVoid;
 
-	BSHType getTypeNode() { 
-		return (BSHType)jjtGetChild(0);
-	}
+    BSHReturnType(int id) {
+        super(id);
+    }
 
-	public String getTypeDescriptor( 
-		CallStack callstack, Interpreter interpreter, String defaultPackage ) 
-	{
-		if ( isVoid )
-			return "V";
-		else
-			return getTypeNode().getTypeDescriptor( 
-				callstack, interpreter, defaultPackage );
-	}
+    BSHType getTypeNode() {
+        return (BSHType) jjtGetChild(0);
+    }
 
-	public Class evalReturnType( 
-		CallStack callstack, Interpreter interpreter ) throws EvalError
-	{
-		if ( isVoid )
-			return Void.TYPE;
-		else
-			return getTypeNode().getType( callstack, interpreter );
-	}
+    public String getTypeDescriptor(CallStack callstack, Interpreter interpreter, String defaultPackage) {
+        if(isVoid) 
+            return "V";
+        
+        return getTypeNode().getTypeDescriptor(callstack, interpreter, defaultPackage);
+    }
+
+    public Class evalReturnType(CallStack callstack, Interpreter interpreter) throws EvalError {
+        if(isVoid)
+            return Void.TYPE;
+        return getTypeNode().getType(callstack, interpreter);
+    }
 }
-
