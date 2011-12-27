@@ -41,7 +41,7 @@ class BSHMethodInvocation extends SimpleNode {
      * Evaluate the method invocation with the specified callstack and interpreter
      */
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         NameSpace namespace = callstack.top();
         BSHAmbiguousName nameNode = getNameNode();
 

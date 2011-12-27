@@ -28,7 +28,7 @@ public class BSHPackageDeclaration extends SimpleNode {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         BSHAmbiguousName name = (BSHAmbiguousName) jjtGetChild(0);
         NameSpace namespace = callstack.top();
         namespace.setPackage(name.text);

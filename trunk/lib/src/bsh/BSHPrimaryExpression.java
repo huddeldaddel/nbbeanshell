@@ -21,6 +21,9 @@
  **********************************************************************************************************************/
 package bsh;
 
+import static bsh.DebuggerContext.ExecutionMode.StepInto;
+import static bsh.DebuggerContext.ExecutionMode.StepOver;
+
 class BSHPrimaryExpression extends SimpleNode {
 
     BSHPrimaryExpression(int id) {
@@ -31,24 +34,23 @@ class BSHPrimaryExpression extends SimpleNode {
      * Evaluate to a value object.
      */
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
-        if(interpreter instanceof Debugger) {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
+        if((null != dContext) && (interpreter instanceof Debugger)) {
             final Debugger debugger = (Debugger) interpreter;
-            if(debugger.isBreakpoint(this)) {
+            if((StepInto == dContext.getMode()) || debugger.isBreakpoint(this)) {
                 debugger.parkNode(this, null);
                 return null;
             }
         }
         
-        return eval(false, callstack, interpreter);
+        return eval(false, callstack, interpreter, dContext);
     }
 
     /**
      * Evaluate to a value object.
      */
     public LHS toLHS(CallStack callstack, Interpreter interpreter) throws EvalError {
-        Object obj = eval(true, callstack, interpreter);
-
+        Object obj = eval(true, callstack, interpreter, null);
         if (!(obj instanceof LHS)) {
             throw new EvalError("Can't assign to:", this, callstack);
         } else {
@@ -62,7 +64,7 @@ class BSHPrimaryExpression extends SimpleNode {
      * We don't eval() any nodes until the suffixes have had an opportunity to work through them. This lets the suffixes
      * decide how to interpret an ambiguous name (e.g. for the .class operation).
      */
-    private Object eval(boolean toLHS, CallStack callstack, Interpreter interpreter) throws EvalError {
+    private Object eval(boolean toLHS, CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         Object obj = jjtGetChild(0);
         int numChildren = jjtGetNumChildren();
 
@@ -84,7 +86,8 @@ class BSHPrimaryExpression extends SimpleNode {
             if (toLHS) {// is this right?
                 throw new EvalError("Can't assign to prefix.", this, callstack);
             } else {
-                obj = ((SimpleNode) obj).eval(callstack, interpreter, null);
+                final boolean stepInto = (null != dContext) && StepInto == dContext.getMode();
+                obj = ((SimpleNode) obj).eval(callstack, interpreter, stepInto ? dContext : null);
             }
         }
 

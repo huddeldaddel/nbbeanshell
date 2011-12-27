@@ -100,7 +100,7 @@ class BSHMethodDeclaration extends SimpleNode {
      * caller's namespace.
      */
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         returnType = evalReturnType(callstack, interpreter);
         evalNodes(callstack, interpreter);
 

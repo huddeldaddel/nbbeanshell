@@ -1,9 +1,30 @@
+/***********************************************************************************************************************
+ *                                                                                                                     *
+ *  This file is part of the BeanShell Java Scripting distribution.                                                    *
+ *  Documentation and updates may be found at http://www.beanshell.org/                                                *
+ *                                                                                                                     *
+ *  This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General  *
+ *  Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)  *
+ *  any later version.                                                                                                 *
+ *                                                                                                                     *
+ *  This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied *
+ *  warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for    *
+ *  more details.                                                                                                      *
+ *                                                                                                                     *
+ *  You should have received a copy of the GNU Lesser General Public License along with this program.                  *
+ *  If not, see <http://www.gnu.org/licenses/>.                                                                        *
+ *                                                                                                                     *
+ *  Thomas Werner                                                                                                      *
+ *  http://www.xing.com/profile/Thomas_Werner108                                                                       *
+ *                                                                                                                     *
+ **********************************************************************************************************************/
 package bsh;
 
 import java.io.PrintStream;
 import java.io.Reader;
 import java.util.LinkedList;
 import java.util.List;
+import static bsh.DebuggerContext.ExecutionMode.*;
 
 /**
  * A debugger that executes BeanShell scripts node by node.
@@ -19,10 +40,8 @@ public class Debugger extends Interpreter {
     
     private SimpleNode parkedNode;          // node to be handled next
     private Object nodeStatus = null;       // status of the parkedNode
-    
-    private boolean stepByStep = false;     // step through the code => all lines are breakpoints
-    private SimpleNode lastNode = null;     // node that be just stopped at
-    
+    private boolean parkFlag = false;       // check whether or not a node has been parked
+        
     private Debugger localInterpreter;
     private CallStack callstack;
     private boolean endOfFile = false;
@@ -69,14 +88,13 @@ public class Debugger extends Interpreter {
      * 
      * @param sourceFileInfo identifies the script in the BreakpointContainer
      * @throws EvalError on script problems
-     * @throws TargetError on unhandled exceptions from the script
      */
     public void debug(Reader in, String sourceFileInfo) throws EvalError {
         this.sourceFileInfo = sourceFileInfo;
         
         localInterpreter = new Debugger(in, out, err, false, globalNameSpace, this, sourceFileInfo, breakpointProvider);
         localInterpreter.setDebuggerListeners(listeners);
-	callstack = new CallStack(globalNameSpace);
+        callstack = new CallStack(globalNameSpace);
         endOfFile = false;
         
         boolean stopped = false;
@@ -86,7 +104,7 @@ public class Debugger extends Interpreter {
             try {
                 currentNode = getNextNode();
                 if(currentNode != null) {
-                    final CommandResult result = executeCommand(currentNode, null);
+                    final CommandResult result = executeCommand(currentNode, new DebuggerContext(null, Run));
                     switch(result) {
                         case Break:
                             executed = false;
@@ -119,37 +137,48 @@ public class Debugger extends Interpreter {
      * Fired when a node has been reached - but not executed yet. We will execute it and stop at the next node.
      * 
      * @throws EvalError on script problems
-     * @throws TargetError on unhandled exceptions from the script
      */
     public void stepOver() throws EvalError {
         final SimpleNode node = localInterpreter.parkedNode;
-        final Object resumeStatus = localInterpreter.nodeStatus;
+        final Object resumeStatus = localInterpreter.nodeStatus;        
         
-        localInterpreter.parkedNode = null;
-        localInterpreter.nodeStatus = null;
+        boolean stopped = false;
+        boolean executed = false;
+        try {
+            if(node != null) {
+                final CommandResult result = executeCommand(node, new DebuggerContext(resumeStatus, StepOver));
+                switch(result) {
+                    case Break:
+                        throw new EvalError("Error in debugger", node, callstack);
+                    case Cancel:
+                        executed = true;
+                        stopped = true;
+                        break;
+                    case Ok:
+                        executed = true;
+                        stopped = false;                                                
+                        break;
+                }
+            }
+        } catch(Throwable t) {
+            handleException(node, t);
+        } finally {
+            if(executed) {
+                cleanUp();
+                
+                if(!stopped) {
+                    localInterpreter.parkedNode = getNextNode();
+                    localInterpreter.nodeStatus = null;
+                    if(null != localInterpreter.parkedNode)
+                        fireStopped(localInterpreter.parkedNode.getLineNumber());
+                }
+            }
+        }        
         
-        final CommandResult result = executeCommand(node, resumeStatus);
         
-//        try {
-//            if(node != null) {
-//                boolean stopped = false;
-//                if(!executeCommand(node) || endOfFile) {
-//                    stopped = true;
-//                    fireFinished();
-//                }
-//                cleanUp();
-//            
-//                if(!stopped) {
-//                    node = getNextNode();
-//                    if(null != node) {
-//                        fireStopped(node.getLineNumber());
-//                    } else
-//                        fireFinished();
-//                }
-//            }
-//        } catch(Throwable t) {
-//            handleException(node, t);
-//        }
+        if(endOfFile || stopped)
+            fireFinished();
+        
     }
     
     //- Interface used by nodes - will be called in localInterpreter ---------------------------------------------------
@@ -157,13 +186,13 @@ public class Debugger extends Interpreter {
     void parkNode(SimpleNode nodeToPark, Object nodeStatus) {
         this.parkedNode = nodeToPark;
         this.nodeStatus = nodeStatus;
-        this.lastNode = nodeToPark;
+        parkFlag = true;
         fireStopped(parkedNode.getLineNumber());
     }
     
     boolean isBreakpoint(SimpleNode node) {
-        return (node != lastNode) && 
-               (stepByStep || breakpointProvider.isBreakpoint(node.getLineNumber(), node.getSourceFile()));
+        return (parkedNode != node) && 
+               breakpointProvider.isBreakpoint(node.getLineNumber(), node.getSourceFile());
     }
     
     //- End of interface used by nodes ---------------------------------------------------------------------------------
@@ -173,9 +202,10 @@ public class Debugger extends Interpreter {
      * @throws EvalError on script problems
      * @throws TargetError on unhandled exceptions from the script 
      */
-    private CommandResult executeCommand(SimpleNode node, Object nodeStatus) throws EvalError {
-        final Object returnValue = node.eval(callstack, localInterpreter, nodeStatus);
-        if(localInterpreter.parkedNode == node)
+    private CommandResult executeCommand(SimpleNode node, DebuggerContext context) throws EvalError {
+        localInterpreter.parkFlag = false;
+        final Object returnValue = node.eval(callstack, localInterpreter, context);
+        if(localInterpreter.parkFlag && (localInterpreter.parkedNode == node))
             return CommandResult.Break;
         return (returnValue instanceof ReturnControl) ? CommandResult.Cancel : CommandResult.Ok;
     }    
