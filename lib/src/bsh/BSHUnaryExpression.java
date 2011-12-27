@@ -31,7 +31,7 @@ class BSHUnaryExpression extends SimpleNode implements ParserConstants {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         SimpleNode node = (SimpleNode) jjtGetChild(0);
 
         // If this is a unary increment of decrement (either pre or postfix)

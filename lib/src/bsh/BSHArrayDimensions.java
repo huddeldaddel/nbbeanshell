@@ -70,7 +70,7 @@ class BSHArrayDimensions extends SimpleNode {
      * The structure of the array dims is maintained in dimensions.
      */
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         SimpleNode child = (SimpleNode) jjtGetChild(0);
 
         /*

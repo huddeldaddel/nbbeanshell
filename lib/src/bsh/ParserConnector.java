@@ -475,21 +475,6 @@ public class ParserConnector {
         return result;
     }
     
-//    /**
-//     * Prints the (complete) structure of the given note. The first call should have a prefix of "".
-//     */
-//    private void printNode(SimpleNode node, String prefix) {
-//        System.out.print(prefix);
-//        System.out.print("> ");
-//        System.out.print(node.getText());
-//        System.out.print("\n");
-//        
-//        for(int i=0; i<node.jjtGetNumChildren(); i++) {
-//            SimpleNode child = node.getChild(i);
-//            printNode(child, "--" +prefix);
-//        }
-//    }    
-    
     private Set<String> getVariableNames(Collection<BshVariableInfo> variables) {
         final Set<String> result = new HashSet<String>();
         for(BshVariableInfo varInfo: variables)

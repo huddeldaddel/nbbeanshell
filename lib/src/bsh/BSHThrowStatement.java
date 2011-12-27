@@ -28,7 +28,7 @@ class BSHThrowStatement extends SimpleNode {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         Object obj = ((SimpleNode) jjtGetChild(0)).eval(callstack, interpreter, null);
 
         // need to loosen this to any throwable... do we need to handle that in interpreter somewhere?  check first...

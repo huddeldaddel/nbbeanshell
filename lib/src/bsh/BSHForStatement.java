@@ -33,14 +33,13 @@ class BSHForStatement extends SimpleNode implements ParserConstants {
     private SimpleNode expression;
     private SimpleNode forUpdate;
     private SimpleNode statement;
-    private boolean parsed;
 
     BSHForStatement(int id) {
         super(id);
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         int i = 0;
         if(hasForInit) 
             forInit = ((SimpleNode) jjtGetChild(i++));

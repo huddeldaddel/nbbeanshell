@@ -35,7 +35,7 @@ class BSHAllocationExpression extends SimpleNode {
     private static int innerClassCount = 0;
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         // type is either a class name or a primitive type
         SimpleNode type = (SimpleNode) jjtGetChild(0);
 

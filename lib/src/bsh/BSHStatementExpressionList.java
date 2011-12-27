@@ -28,7 +28,7 @@ class BSHStatementExpressionList extends SimpleNode {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         int n = jjtGetNumChildren();
         for(int i = 0; i < n; i++) {
             SimpleNode node = ((SimpleNode) jjtGetChild(i));

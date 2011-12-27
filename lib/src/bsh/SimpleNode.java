@@ -149,9 +149,16 @@ class SimpleNode implements Node {
      * 
      * @param callstack the call stack for this node
      * @param interpreter the interpreter to be used
-     * @param resumeStatus status of this node when is was parked in the debugger (or null)
+     * @param debuggerContext if null: debugging is disabled
+     *                        if stepOver: the command will be executed. The debugger will stop only if the command has
+     *                                     a breakpoint assigned to
+     *                        if stepInto: the command will be executed. The debugger will stop at each possible 
+     *                                     location.
+     * 
+     * 
+     * 
      */
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext debuggerContext) throws EvalError {
         throw new InterpreterError("Unimplemented or inappropriate for " + getClass().getName());
     }
 

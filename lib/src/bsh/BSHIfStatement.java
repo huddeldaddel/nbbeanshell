@@ -28,7 +28,7 @@ class BSHIfStatement extends SimpleNode {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         Object ret = null;
 
         if(evaluateCondition((SimpleNode) jjtGetChild(0), callstack, interpreter)) {   // if

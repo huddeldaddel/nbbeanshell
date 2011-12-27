@@ -32,7 +32,7 @@ class BSHTernaryExpression extends SimpleNode {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         final SimpleNode cond = (SimpleNode) jjtGetChild(0);
         final SimpleNode evalTrue = (SimpleNode) jjtGetChild(1);
         final SimpleNode evalFalse = (SimpleNode) jjtGetChild(2);

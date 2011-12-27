@@ -42,7 +42,7 @@ class BSHClassDeclaration extends SimpleNode {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         int child = 0;
 
         // resolve superclass if any

@@ -30,7 +30,7 @@ class BSHSwitchLabel extends SimpleNode {
     }
 
     @Override
-    public Object eval(CallStack callstack, Interpreter interpreter, Object resumeStatus) throws EvalError {
+    public Object eval(CallStack callstack, Interpreter interpreter, DebuggerContext dContext) throws EvalError {
         if(isDefault)
             return null; // should probably error
         SimpleNode label = ((SimpleNode)jjtGetChild(0));
