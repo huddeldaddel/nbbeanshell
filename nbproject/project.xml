@@ -7,15 +7,6 @@
             <standalone/>
             <module-dependencies>
                 <dependency>
-                    <code-name-base>org.netbeans.api.debugger</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <release-version>1</release-version>
-                        <specification-version>1.33.1</specification-version>
-                    </run-dependency>
-                </dependency>
-                <dependency>
                     <code-name-base>org.netbeans.api.progress</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -31,24 +22,6 @@
                     <run-dependency>
                         <release-version>2</release-version>
                         <specification-version>2.17.2.2.1.1.6</specification-version>
-                    </run-dependency>
-                </dependency>
-                <dependency>
-                    <code-name-base>org.netbeans.modules.editor</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <release-version>3</release-version>
-                        <specification-version>1.59.1.5.19.25</specification-version>
-                    </run-dependency>
-                </dependency>
-                <dependency>
-                    <code-name-base>org.netbeans.modules.editor.lib</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <release-version>3</release-version>
-                        <specification-version>3.17.1.19.25</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
@@ -85,15 +58,6 @@
                     <run-dependency>
                         <release-version>1</release-version>
                         <specification-version>1.31.1</specification-version>
-                    </run-dependency>
-                </dependency>
-                <dependency>
-                    <code-name-base>org.netbeans.spi.debugger.ui</code-name-base>
-                    <build-prerequisite/>
-                    <compile-dependency/>
-                    <run-dependency>
-                        <release-version>1</release-version>
-                        <specification-version>2.29.1</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>

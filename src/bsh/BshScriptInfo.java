@@ -13,20 +13,12 @@
  * You should have received a copy of the GNU Lesser General Public License along with this library; if not, write to
  * the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
-package de.bfg9000.beanshell.navigator;
-
-import org.openide.nodes.AbstractNode;
-import org.openide.nodes.Children;
+package bsh;
 
 /**
  *
  * @author Thomas Werner
  */
-public class ErrorNode extends AbstractNode {
-    
-    public ErrorNode() {
-        super(Children.LEAF);
-        setDisplayName("The script can not be parsed");
-    }
+public class BshScriptInfo extends BshInfoContainer {
     
 }
