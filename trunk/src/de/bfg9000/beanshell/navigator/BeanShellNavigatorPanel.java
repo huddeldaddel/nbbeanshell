@@ -15,12 +15,12 @@
  */
 package de.bfg9000.beanshell.navigator;
 
+import bsh.ParserConnector;
 import java.awt.BorderLayout;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
@@ -28,7 +28,8 @@ import org.netbeans.spi.navigator.NavigatorPanel;
 import org.openide.explorer.ExplorerManager;
 import org.openide.explorer.ExplorerUtils;
 import org.openide.explorer.view.BeanTreeView;
-import org.openide.nodes.Node;
+import org.openide.nodes.AbstractNode;
+import org.openide.nodes.Children;
 import org.openide.util.Lookup;
 
 /**
@@ -37,11 +38,13 @@ import org.openide.util.Lookup;
  * 
  * @author Thomas Werner
  */
-public class BeanShellNavigatorPanel extends JPanel 
-             implements NavigatorPanel, ExplorerManager.Provider, DocumentListener {
+public class BeanShellNavigatorPanel extends JPanel implements NavigatorPanel, ExplorerManager.Provider {
+    
+    private static final long serialVersionUID = 1L;
 
-    private final ExplorerManager manager = new ExplorerManager();
-    private final BeanTreeView beanTreeView = new BeanTreeView();
+    private final ExplorerManager manager;
+    private final BeanTreeView beanTreeView;
+    private final DocumentChangeListener documentListener;
     private final Lookup lookup;
     
     private Timer lookupTimer;
@@ -49,9 +52,15 @@ public class BeanShellNavigatorPanel extends JPanel
     
     public BeanShellNavigatorPanel() {
         setLayout(new BorderLayout());
+        
+        manager = new ExplorerManager();
+        lookup = ExplorerUtils.createLookup(manager, getActionMap());        
+        
+        beanTreeView = new BeanTreeView();
+        beanTreeView.setRootVisible(false);
         add(beanTreeView, BorderLayout.CENTER);
         
-        lookup = ExplorerUtils.createLookup(manager, getActionMap());        
+        documentListener = new DocumentChangeListener();
     }
     
     @Override
@@ -72,10 +81,10 @@ public class BeanShellNavigatorPanel extends JPanel
     @Override
     public void panelActivated(Lookup lkp) { 
         if(null != connectedTextComponent)
-            connectedTextComponent.getDocument().removeDocumentListener(this);
+            connectedTextComponent.getDocument().removeDocumentListener(documentListener);
         connectedTextComponent = org.netbeans.api.editor.EditorRegistry.lastFocusedComponent();
         if(null != connectedTextComponent) {
-            connectedTextComponent.getDocument().addDocumentListener(this);
+            connectedTextComponent.getDocument().addDocumentListener(documentListener);
             updateContent();
         } else { 
             startLookupTimer();
@@ -88,7 +97,7 @@ public class BeanShellNavigatorPanel extends JPanel
         stopLookupTimer();
             
         if(null != connectedTextComponent)
-            connectedTextComponent.getDocument().removeDocumentListener(this);        
+            connectedTextComponent.getDocument().removeDocumentListener(documentListener);        
         ExplorerUtils.activateActions(manager, false);
     }
 
@@ -101,43 +110,12 @@ public class BeanShellNavigatorPanel extends JPanel
     public ExplorerManager getExplorerManager() {
         return manager;
     }
-
-    @Override
-    public void insertUpdate(DocumentEvent e) {
-        updateContent();
-    }
-
-    @Override
-    public void removeUpdate(DocumentEvent e) {
-        updateContent();
-    }
-
-    @Override
-    public void changedUpdate(DocumentEvent e) {
-        updateContent();
-    }
     
     private void updateContent() {
-        final String script = null != connectedTextComponent ? connectedTextComponent.getText() : "";
-        try {
-            beanTreeView.setRootVisible(false);
-            manager.setRootContext(new RootNode(script, connectedTextComponent));
-        } catch(Throwable ex) {
-            beanTreeView.setRootVisible(true);
-            manager.setRootContext(new ErrorNode());
-        }
-        expandRecursively(beanTreeView, manager.getRootContext());
-    }
-
-    private void expandRecursively(final BeanTreeView view, Node node) {
-        view.expandNode(node);
-        for(final Node n : node.getChildren().getNodes())
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    expandRecursively(view, n);
-                }
-            });
+        final String script = null != connectedTextComponent ? connectedTextComponent.getText() : "";        
+        final NodeFactory factory = new NodeFactory(new ParserConnector().parse(script), connectedTextComponent);
+        manager.setRootContext(new AbstractNode(Children.create(factory, false)));
+        beanTreeView.expandAll();
     }
     
     private void startLookupTimer() {
@@ -151,7 +129,7 @@ public class BeanShellNavigatorPanel extends JPanel
                 connectedTextComponent = org.netbeans.api.editor.EditorRegistry.lastFocusedComponent();
                 if(null != connectedTextComponent) {
                     lookupTimer.cancel();
-                    connectedTextComponent.getDocument().addDocumentListener(BeanShellNavigatorPanel.this);
+                    connectedTextComponent.getDocument().addDocumentListener(documentListener);
                     updateContent();
                 }
             }
@@ -163,6 +141,28 @@ public class BeanShellNavigatorPanel extends JPanel
             lookupTimer.cancel();
             lookupTimer = null;
         }
+    }
+ 
+    /**
+     * Listens for modifications of the current script and updates the nodes of the navigator.
+     */
+    private final class DocumentChangeListener implements DocumentListener {
+        
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            updateContent();
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            updateContent();
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            updateContent();
+        }
+        
     }
     
 }

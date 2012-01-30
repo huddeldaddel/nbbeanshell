@@ -23,7 +23,7 @@ import java.util.Set;
  *
  * @author Thomas Werner
  */
-public class BshVariableInfo {
+public class BshVariableInfo implements BshInfo {
     
     private Set<BshModifierInfo> modifiers;
     private String name;
@@ -34,6 +34,7 @@ public class BshVariableInfo {
         modifiers = new HashSet<BshModifierInfo>();
     }
     
+    @Override
     public int getLineNumber() {
         return lineNumber;
     }
@@ -42,6 +43,7 @@ public class BshVariableInfo {
         this.lineNumber = lineNumber;
     }
 
+    @Override
     public Set<BshModifierInfo> getModifiers() {
         return Collections.unmodifiableSet(modifiers);
     }
@@ -50,6 +52,7 @@ public class BshVariableInfo {
         modifiers.add(modifier);
     }
 
+    @Override
     public String getName() {
         return name;
     }
