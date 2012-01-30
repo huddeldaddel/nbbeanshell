@@ -128,5 +128,90 @@ public class BshMethodInfo extends BshInfoContainer implements BshInfo {
     public void setInterface(boolean isInterface) {
         interfaze = isInterface;
     }
+
+    @Override
+    public String getIconPath() {
+        final boolean isStatic = modifiers.contains(BshModifierInfo.Static);
+        
+        if(isInterface())
+            return PRFX +"interface.png";
+        
+        if(isClass())
+            return PRFX +"class.png";
+        
+        if(isConstructor()) {
+            if(modifiers.contains(BshModifierInfo.Private)) {
+                return PRFX +"constructorPrivate.png";
+            } else if(modifiers.contains(BshModifierInfo.Protected)) {
+                return PRFX +"constructorProtected.png";
+            } else if(modifiers.contains(BshModifierInfo.Public)) {
+                return PRFX +"constructorPublic.png";
+            } else {
+                return PRFX +"constructorPackage.png";
+            }
+        }
+        
+        if(modifiers.contains(BshModifierInfo.Private)) {
+            return PRFX +(isStatic ? "methodStPrivate.png" : "methodPrivate.png");
+        } else if(modifiers.contains(BshModifierInfo.Protected)) {
+            return PRFX +(isStatic ? "methodStProtected.png" : "methodProtected.png");
+        } else if(modifiers.contains(BshModifierInfo.Public)) {
+            return PRFX +(isStatic ? "methodStPublic.png" : "methodPublic.png");
+        } else {
+            return PRFX +(isStatic ? "methodStPackage.png" : "methodPackage.png");
+        }
+    }
+    
+    @Override
+    public String toString() {
+        if(isClass())
+            return buildClassName();
+        
+        return buildMethodName();
+    }
+    
+    private String buildClassName() {
+        final StringBuilder builder = new StringBuilder(name);
+        
+        if("Object".equals(getSuperClass()) && getInterfaces().isEmpty())
+            return builder.toString();
+        
+        builder.append(" :: ");
+        if(!"Object".equals(getSuperClass())) {
+            builder.append(getSuperClass());
+            if(!getInterfaces().isEmpty())
+                builder.append(" : ");
+        }
+        
+        for(int i=0; i<getInterfaces().size(); i++) {
+            if(i != 0)
+                builder.append(", ");
+            builder.append(getInterfaces().get(i));
+        }
+        
+        return builder.toString();               
+    }
+    
+    private String buildMethodName() {
+        final StringBuilder builder = new StringBuilder(name);
+        builder.append("(");
+        
+        boolean first = true;
+        for(BshParameterInfo pInfo: getParameters()) {
+            if(!first) 
+                builder.append(", ");
+            first = false;
+            
+            if(!pInfo.getType().equals(ParserConnector.LOOSE_TYPE))
+                builder.append(pInfo.getType()).append(" ");
+            builder.append(pInfo.getName());
+        }
+        builder.append(")");
+        
+        if(!(isClass() || "void".equals(getReturnType())))
+            builder.append(" : ").append(getReturnType());
+               
+        return builder.toString();
+    }
     
 }

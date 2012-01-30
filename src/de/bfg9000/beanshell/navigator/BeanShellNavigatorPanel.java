@@ -21,6 +21,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
@@ -148,19 +149,38 @@ public class BeanShellNavigatorPanel extends JPanel implements NavigatorPanel, E
      */
     private final class DocumentChangeListener implements DocumentListener {
         
+        private volatile long lastUpdate = 0;
+        private final Timer delayTimer = new Timer();
+        
         @Override
         public void insertUpdate(DocumentEvent e) {
-            updateContent();
+            modificationHappened();
         }
 
         @Override
         public void removeUpdate(DocumentEvent e) {
-            updateContent();
+            modificationHappened();
         }
 
         @Override
         public void changedUpdate(DocumentEvent e) {
-            updateContent();
+            modificationHappened();
+        }
+        
+        private void modificationHappened() {            
+            lastUpdate = System.currentTimeMillis();
+            delayTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if(System.currentTimeMillis() -lastUpdate >= 500)
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateContent();
+                            }
+                        });
+                }
+            }, 500);
         }
         
     }

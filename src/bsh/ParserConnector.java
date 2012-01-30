@@ -111,6 +111,10 @@ public class ParserConnector {
         final BshMethodInfo result = new BshMethodInfo();
         final BSHClassDeclaration clss = (BSHClassDeclaration) node;
         
+        result.setBeginColum(clss.firstToken.beginColumn);
+        result.setBeginLine(clss.firstToken.beginLine);
+        result.setEndColum(clss.lastToken.endColumn);
+        result.setEndLine(clss.lastToken.endLine);
         result.setLineNumber(node.getLineNumber());
         result.setName(getClassName(clss));
         result.setReturnType("void");
@@ -325,6 +329,10 @@ public class ParserConnector {
         final BshMethodInfo result = new BshMethodInfo();
         final BSHMethodDeclaration method = (BSHMethodDeclaration) node;
         
+        result.setBeginColum(method.firstToken.beginColumn);
+        result.setBeginLine(method.firstToken.beginLine);
+        result.setEndColum(method.lastToken.endColumn);
+        result.setEndLine(method.lastToken.endLine);
         result.setLineNumber(node.getLineNumber());
         result.setName(getMethodName(method));
         result.setReturnType(getMethodReturnType(method));

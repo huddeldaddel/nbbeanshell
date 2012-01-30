@@ -30,24 +30,24 @@ import org.openide.windows.TopComponent;
  * @author Thomas Werner
  */
 @ConvertAsProperties(dtd = "-//de.bfg9000.beanshell//Shell//EN", autostore = false)
-@TopComponent.Description(preferredID = "ShellTopComponent",
+@TopComponent.Description(preferredID = "ConsoleTopComponent",
                           iconBase="de/bfg9000/beanshell/icons/icon.gif",
                           persistenceType = TopComponent.PERSISTENCE_NEVER)
 @TopComponent.Registration(mode = "output", openAtStartup = false)
-@ActionID(category = "Window", id = "de.bfg9000.beanshell.ShellTopComponent")
+@ActionID(category = "Window", id = "de.bfg9000.beanshell.ConsoleTopComponent")
 @ActionReference(path = "Menu/Window/Other", position = 100)
-@TopComponent.OpenActionRegistration(displayName = "#CTL_ShellAction", preferredID = "ShellTopComponent")
-public final class ShellTopComponent extends TopComponent {
+@TopComponent.OpenActionRegistration(displayName = "#CTL_ConsoleAction", preferredID = "ConsoleTopComponent")
+public final class ConsoleTopComponent extends TopComponent {
 
     private static final long serialVersionUID = 2451386404816691136L;
 
     private ShellThread shellRunner;
 
-    public ShellTopComponent() {
+    public ConsoleTopComponent() {
         initComponents();
 
-        setName(NbBundle.getMessage(ShellTopComponent.class, "CTL_ShellTopComponent"));
-        setToolTipText(NbBundle.getMessage(ShellTopComponent.class, "HINT_ShellTopComponent"));
+        setName(NbBundle.getMessage(ConsoleTopComponent.class, "CTL_ConsoleTopComponent"));
+        setToolTipText(NbBundle.getMessage(ConsoleTopComponent.class, "HINT_ConsoleTopComponent"));
     }
 
     /**

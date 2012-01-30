@@ -33,8 +33,6 @@ import org.openide.util.Lookup;
  */
 abstract class BeanShellNode extends AbstractNode {
     
-    protected static final String PRFX = "/de/bfg9000/beanshell/icons/";
-    
     private final JTextComponent connectedComponent;
     
     public BeanShellNode(Children children, JTextComponent connectedComponent) {
