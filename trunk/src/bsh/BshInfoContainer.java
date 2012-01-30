@@ -25,8 +25,13 @@ import java.util.List;
  */
 public abstract class BshInfoContainer {
     
-    protected List<BshMethodInfo> methods = new LinkedList<BshMethodInfo>();
-    protected List<BshVariableInfo> variables = new LinkedList<BshVariableInfo>();
+    protected final List<BshMethodInfo> methods = new LinkedList<BshMethodInfo>();
+    protected final List<BshVariableInfo> variables = new LinkedList<BshVariableInfo>();
+    
+    protected int beginLine;
+    protected int beginColum;
+    protected int endLine;
+    protected int endColum;    
     
     public List<BshMethodInfo> getMethods() {
         return methods;
@@ -50,6 +55,38 @@ public abstract class BshInfoContainer {
             if(method.isClass())
                 result.add(method);
         return result;
+    }
+
+    public int getBeginColum() {
+        return beginColum;
+    }
+
+    public void setBeginColum(int beginColum) {
+        this.beginColum = beginColum;
+    }
+
+    public int getBeginLine() {
+        return beginLine;
+    }
+
+    public void setBeginLine(int beginLine) {
+        this.beginLine = beginLine;
+    }
+
+    public int getEndColum() {
+        return endColum;
+    }
+
+    public void setEndColum(int endColum) {
+        this.endColum = endColum;
+    }
+
+    public int getEndLine() {
+        return endLine;
+    }
+
+    public void setEndLine(int endLine) {
+        this.endLine = endLine;
     }
     
 }

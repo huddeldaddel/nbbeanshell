@@ -15,6 +15,7 @@
  */
 package bsh;
 
+import java.awt.Image;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -67,6 +68,25 @@ public class BshVariableInfo implements BshInfo {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    @Override
+    public String getIconPath() {
+        final boolean isStatic = modifiers.contains(BshModifierInfo.Static);
+        if(modifiers.contains(BshModifierInfo.Private)) {
+            return PRFX +(isStatic ? "variableStPrivate.png" : "variablePrivate.png");
+        } else if(modifiers.contains(BshModifierInfo.Protected)) {
+            return PRFX +(isStatic ? "variableStProtected.png" : "variableProtected.png");
+        } else if(modifiers.contains(BshModifierInfo.Public)) {
+            return PRFX +(isStatic ? "variableStPublic.png" : "variablePublic.png");
+        } else {
+            return PRFX +(isStatic ? "variableStPackage.png" : "variablePackage.png");
+        }
+    }
+    
+    @Override
+    public String toString() {
+        return new StringBuilder(type).append(" : ").append(name).toString();
     }
     
 }

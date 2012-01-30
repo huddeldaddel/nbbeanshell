@@ -15,7 +15,6 @@
  */
 package de.bfg9000.beanshell.navigator;
 
-import bsh.BshModifierInfo;
 import bsh.BshVariableInfo;
 import java.awt.Image;
 import javax.swing.text.JTextComponent;
@@ -34,37 +33,17 @@ class VariableNode extends BeanShellNode {
         super(Children.LEAF, connectedComponent);
         this.variable = variable;
         
-        setDisplayName(buildDisplayName());
+        setDisplayName(variable.toString());
     }
     
     @Override
     public Image getIcon(int type) {
-        if(variable.getModifiers().contains(BshModifierInfo.Private)) {
-            return loadIcon(PRFX +(isStatic(variable) ? "variableStPrivate.png" : "variablePrivate.png"));
-        } else if(variable.getModifiers().contains(BshModifierInfo.Protected)) {
-            return loadIcon(PRFX +(isStatic(variable) ? "variableStProtected.png" : "variableProtected.png"));
-        } else if(variable.getModifiers().contains(BshModifierInfo.Public)) {
-            return loadIcon(PRFX +(isStatic(variable) ? "variableStPublic.png" : "variablePublic.png"));
-        } else {
-            return loadIcon(PRFX +(isStatic(variable) ? "variableStPackage.png" : "variablePackage.png"));
-        }
+        return loadIcon(variable.getIconPath());
     }
     
     @Override
     public int getLineNumber() {
         return variable.getLineNumber();
     }
-    
-     private String buildDisplayName() {
-        final StringBuilder builder = new StringBuilder();
-        builder.append(variable.getType())
-               .append(" : ")
-               .append(variable.getName());
-        return builder.toString();
-    }
-     
-    private boolean isStatic(BshVariableInfo variable) {
-        return variable.getModifiers().contains(BshModifierInfo.Static);
-    }
-    
+
 }
