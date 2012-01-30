@@ -21,7 +21,7 @@ import java.util.*;
  *
  * @author Thomas Werner
  */
-public class BshMethodInfo extends BshInfoContainer {
+public class BshMethodInfo extends BshInfoContainer implements BshInfo {
    
     private Set<BshModifierInfo> modifiers;
     private String name;
@@ -41,6 +41,7 @@ public class BshMethodInfo extends BshInfoContainer {
         superClass = "Object";
     }
 
+    @Override
     public int getLineNumber() {
         return lineNumber;
     }
@@ -49,6 +50,7 @@ public class BshMethodInfo extends BshInfoContainer {
         this.lineNumber = lineNumber;
     }
 
+    @Override
     public Set<BshModifierInfo> getModifiers() {
         return modifiers;
     }
@@ -57,6 +59,7 @@ public class BshMethodInfo extends BshInfoContainer {
         this.modifiers.addAll(modifiers);
     }
 
+    @Override
     public String getName() {
         return name;
     }

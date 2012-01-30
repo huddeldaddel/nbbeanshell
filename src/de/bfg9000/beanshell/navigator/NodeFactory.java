@@ -15,6 +15,7 @@
  */
 package de.bfg9000.beanshell.navigator;
 
+import bsh.BshInfo;
 import bsh.BshInfoContainer;
 import bsh.BshMethodInfo;
 import bsh.BshVariableInfo;
@@ -28,7 +29,7 @@ import org.openide.nodes.Node;
  *
  * @author Thomas Werner
  */
-class NodeFactory extends ChildFactory {
+class NodeFactory extends ChildFactory<BshInfo> {
 
     private final BshInfoContainer bshInfoContainer;
     private final JTextComponent connectedComponent;
@@ -39,7 +40,7 @@ class NodeFactory extends ChildFactory {
     }
     
     @Override
-    protected boolean createKeys(List toPopulate) {
+    protected boolean createKeys(List<BshInfo> toPopulate) {
         final List<BshMethodInfo> classes = bshInfoContainer.getClasses();
         final List<BshMethodInfo> methods = bshInfoContainer.getMethods();
         final List<BshVariableInfo> variables = bshInfoContainer.getVariables();        
@@ -67,9 +68,9 @@ class NodeFactory extends ChildFactory {
     }
     
     @Override
-    protected Node createNodeForKey(Object key) {
+    protected Node createNodeForKey(BshInfo key) {
         if(key instanceof BshMethodInfo) {
-            final ChildFactory factory = new NodeFactory((BshMethodInfo) key, connectedComponent);
+            final ChildFactory<BshInfo> factory = new NodeFactory((BshMethodInfo) key, connectedComponent);
             return new MethodNode((BshMethodInfo) key, Children.create(factory, false), connectedComponent);
         }
         

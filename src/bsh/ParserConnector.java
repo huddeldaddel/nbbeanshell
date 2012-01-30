@@ -34,9 +34,8 @@ public class ParserConnector {
      * 
      * @param inputString the script
      * @return a {@code BshScriptInfo} object containing the data that has been gathered
-     * @throws ParseException if the script is not valid
      */
-    public BshScriptInfo parse(String inputString) throws ParseException {
+    public BshScriptInfo parse(String inputString) {
         return parse(new Parser(new StringReader(inputString)));
     }
     
@@ -45,9 +44,8 @@ public class ParserConnector {
      * 
      * @param inputStream the script
      * @return a {@code BshScriptInfo} object containing the data that has been gathered
-     * @throws ParseException if the script is not valid
      */
-    public BshScriptInfo parse(InputStream inputStream) throws ParseException {
+    public BshScriptInfo parse(InputStream inputStream) {
         return parse(new Parser(inputStream));
     }
     
@@ -56,13 +54,20 @@ public class ParserConnector {
      * 
      * @param parser the parser to be used
      * @return a {@code BshScriptInfo} object containing the data that has been gathered
-     * @throws ParseException if the script is not valid
      */
-    private BshScriptInfo parse(Parser parser) throws ParseException {
+    private BshScriptInfo parse(Parser parser) {
         final BshScriptInfo result = new BshScriptInfo();
         parser.setRetainComments(true);
-        try {
-            while(!parser.Line()) {
+        
+        boolean error = false;
+        int line = -1;
+        int col = -1;
+        
+        while(true) {
+            try {
+                if(parser.Line())
+                    break;
+                
                 final SimpleNode node = parser.popNode();
                 if(isMethod(node)) {
                     result.addMethods(Collections.singleton(buildMethodInfo(node)));
@@ -70,12 +75,19 @@ public class ParserConnector {
                     result.addVariables(Collections.singleton(buildVariableInfo(node)));
                 } else if(isClass(node))
                     result.addMethods(Collections.singleton(buildClassInfo(node)));
+                
+                error = false;
+            } catch(Throwable t) {
+                if(error && ((line == parser.jj_input_stream.line) && (col == parser.jj_input_stream.column)))
+                    break;
+                error = true;
+            } finally {
+                line = parser.jj_input_stream.line;
+                col = parser.jj_input_stream.column;
             }
-            removeDuplicateVariables(result.getVariables().iterator());
-            removeLooselyTypedOuterVariables(result, getVariableNames(new ArrayList<BshVariableInfo>()));
-        } catch(Error err) {
-            throw new ParseException(err.getMessage());
         }
+        removeDuplicateVariables(result.getVariables().iterator());
+        removeLooselyTypedOuterVariables(result, getVariableNames(new ArrayList<BshVariableInfo>()));        
         return result;
     }    
     
