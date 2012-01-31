@@ -33,7 +33,7 @@ public class ParserConnectorTest {
      */
     @Test
     public void testJavaStyleMethodWithParameter() throws Exception {
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse("public\nvoid\nprintText(String text) {\nprint(text);\n}");
         
         assertEquals(1, sInfo.getMethods().size());
@@ -58,7 +58,7 @@ public class ParserConnectorTest {
      */
     @Test
     public void testJavaStyleMethodWithoutParameter() throws Exception {
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse("public\nboolean\nisTest() {\nreturn true;\n}");
         
         assertEquals(1, sInfo.getMethods().size());
@@ -79,7 +79,7 @@ public class ParserConnectorTest {
      */
     @Test
     public void testStaticMethodWithMultipleParameters() throws Exception {
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final String script = "private static boolean doAThing(String a, boolean b, String muahah) { return false; }";
         final BshScriptInfo sInfo = pConnector.parse(script);
         
@@ -124,7 +124,7 @@ public class ParserConnectorTest {
               .append("return \"foobar\";\n")
               .append("}");
         
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse(script.toString());
         
         assertEquals(1, sInfo.getMethods().size());
@@ -152,7 +152,7 @@ public class ParserConnectorTest {
      */
     @Test
     public void testMethodWithLooselyTypedParameters() throws Exception {
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse("blonk(a, b) { print(\"kkkk\"); }");
         
         assertEquals(1, sInfo.getMethods().size());
@@ -165,9 +165,9 @@ public class ParserConnectorTest {
         assertEquals(2, mInfo.getParameters().size());
         
         assertEquals("a", mInfo.getParameters().get(0).getName());
-        assertEquals(ParserConnector.LOOSE_TYPE, mInfo.getParameters().get(0).getType());
+        assertEquals(BshParserConnector.LOOSE_TYPE, mInfo.getParameters().get(0).getType());
         assertEquals("b", mInfo.getParameters().get(1).getName());
-        assertEquals(ParserConnector.LOOSE_TYPE, mInfo.getParameters().get(1).getType());
+        assertEquals(BshParserConnector.LOOSE_TYPE, mInfo.getParameters().get(1).getType());
         
         assertEquals(0, mInfo.getMethods().size());
     }
@@ -177,7 +177,7 @@ public class ParserConnectorTest {
      */
     @Test
     public void testMethodWithLooseReturnType() throws Exception {
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse("blonkABlonk(a, b) { return a +b; }");
         
         assertEquals(1, sInfo.getMethods().size());
@@ -185,14 +185,14 @@ public class ParserConnectorTest {
         final BshMethodInfo mInfo = sInfo.getMethods().get(0);
         assertEquals("blonkABlonk", mInfo.getName());
         assertEquals(1, mInfo.getLineNumber());
-        assertEquals(ParserConnector.LOOSE_TYPE, mInfo.getReturnType());
+        assertEquals(BshParserConnector.LOOSE_TYPE, mInfo.getReturnType());
         assertEquals(0, mInfo.getModifiers().size());
         assertEquals(2, mInfo.getParameters().size());
         
         assertEquals("a", mInfo.getParameters().get(0).getName());
-        assertEquals(ParserConnector.LOOSE_TYPE, mInfo.getParameters().get(0).getType());
+        assertEquals(BshParserConnector.LOOSE_TYPE, mInfo.getParameters().get(0).getType());
         assertEquals("b", mInfo.getParameters().get(1).getName());
-        assertEquals(ParserConnector.LOOSE_TYPE, mInfo.getParameters().get(1).getType());
+        assertEquals(BshParserConnector.LOOSE_TYPE, mInfo.getParameters().get(1).getType());
         
         assertEquals(0, mInfo.getMethods().size());
     }
@@ -217,7 +217,7 @@ public class ParserConnectorTest {
               .append("return this;\n")
               .append("}");
         
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse(script.toString());
                 
         assertEquals(1, sInfo.getClasses().size());
@@ -260,7 +260,7 @@ public class ParserConnectorTest {
               .append("return this;\n")
               .append("}");
         
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse(script.toString());
         
         assertEquals(1, sInfo.getClasses().size());
@@ -281,7 +281,7 @@ public class ParserConnectorTest {
         
         assertEquals(3, cInfo.getVariables().get(1).getLineNumber());
         assertEquals("ht", cInfo.getVariables().get(1).getName());
-        assertEquals(ParserConnector.LOOSE_TYPE, cInfo.getVariables().get(1).getType());
+        assertEquals(BshParserConnector.LOOSE_TYPE, cInfo.getVariables().get(1).getType());
         
         assertEquals(4, cInfo.getVariables().get(2).getLineNumber());
         assertEquals("i", cInfo.getVariables().get(2).getName());
@@ -292,7 +292,7 @@ public class ParserConnectorTest {
         
         assertEquals(5, cInfo.getVariables().get(3).getLineNumber());
         assertEquals("d", cInfo.getVariables().get(3).getName());
-        assertEquals(ParserConnector.LOOSE_TYPE, cInfo.getVariables().get(3).getType());        
+        assertEquals(BshParserConnector.LOOSE_TYPE, cInfo.getVariables().get(3).getType());        
     }
     
     /**
@@ -301,7 +301,7 @@ public class ParserConnectorTest {
      */
     @Test
     public void testVariableInScript() throws Exception {
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse("int j = 0;\nprint(j);");
         
         assertEquals(0, sInfo.getClasses().size());
@@ -337,7 +337,7 @@ public class ParserConnectorTest {
               .append("print(j);\n")
               .append("print(b);\n");
         
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse(script.toString());
         
         assertEquals(0, sInfo.getClasses().size());
@@ -350,7 +350,7 @@ public class ParserConnectorTest {
         
         assertEquals(7, sInfo.getVariables().get(1).getLineNumber());
         assertEquals("b", sInfo.getVariables().get(1).getName());
-        assertEquals(ParserConnector.LOOSE_TYPE, sInfo.getVariables().get(1).getType());        
+        assertEquals(BshParserConnector.LOOSE_TYPE, sInfo.getVariables().get(1).getType());        
     }
     
     /**
@@ -359,7 +359,7 @@ public class ParserConnectorTest {
     @Test
     public void testOuterVariableUsedInScriptedClass() throws Exception {
         final String script = "/bsh/scripts/cascadedDeclaration.bsh";
-        final ParserConnector pConnector = new ParserConnector();
+        final BshParserConnector pConnector = new BshParserConnector();
         final BshScriptInfo sInfo = pConnector.parse(getClass().getResourceAsStream(script));
         
         assertEquals(1, sInfo.getClasses().size());                                             // FooObject

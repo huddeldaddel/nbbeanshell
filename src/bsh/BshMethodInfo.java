@@ -214,7 +214,7 @@ public class BshMethodInfo extends BshInfoContainer implements BshInfo {
                 builder.append(", ");
             first = false;
             
-            if(!pInfo.getType().equals(ParserConnector.LOOSE_TYPE))
+            if(!pInfo.getType().equals(BshParserConnector.LOOSE_TYPE))
                 builder.append(pInfo.getType()).append(" ");
             builder.append(pInfo.getName());
         }

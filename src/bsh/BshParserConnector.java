@@ -25,7 +25,7 @@ import java.util.*;
  * 
  * @author Thomas Werner
  */
-public class ParserConnector {
+public class BshParserConnector {
     
     public static final String LOOSE_TYPE = "<loose type>";
     

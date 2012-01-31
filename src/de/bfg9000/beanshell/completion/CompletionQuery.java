@@ -15,8 +15,8 @@
  */
 package de.bfg9000.beanshell.completion;
 
+import bsh.BshParserConnector;
 import bsh.BshScriptInfo;
-import bsh.ParserConnector;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
@@ -59,15 +59,16 @@ class CompletionQuery extends AsyncCompletionQuery {
             filter = new String(line, whiteOffset +1, line.length -whiteOffset -1);
             startOffset = (whiteOffset > 0) ? lineStartOffset +whiteOffset +1 : lineStartOffset;
             lineNumber = doc.getDefaultRootElement().getElementIndex(caretOffset) +1;
-            colNumber = caretOffset -bDoc.getParagraphElement(caretOffset).getStartOffset() +1;
+            colNumber = 0 /* caretOffset -bDoc.getParagraphElement(caretOffset).getStartOffset() +1 */;
         } catch (BadLocationException ex) {
             logger.log(Level.WARNING, null, ex);
         }
 
         try {
-            final String script = doc.getText(0, doc.getLength());
-            // TODO: Remove current line from script as it's almost always not a correct statement, yet.
-            final BshScriptInfo scriptInfo = new ParserConnector().parse(script);
+            // Remove current line from script as it's almost always an incorrect statement, yet. This its kind of a 
+            // hack and doesn't work in all situations - but still better than nothing
+            final String script = removeLine(doc.getText(0, doc.getLength()), lineNumber -1);
+            final BshScriptInfo scriptInfo = new BshParserConnector().parse(script);
             for(CompletionQueryItemProvider provider: itemProviders)
                 resultSet.addAllItems(provider.getItems(scriptInfo, startOffset, caretOffset, filter, lineNumber, 
                                       colNumber));
@@ -105,4 +106,12 @@ class CompletionQuery extends AsyncCompletionQuery {
         return -1;
     }
 
+    private String removeLine(String input, int lineToRemove) {
+        final String lines[] = input.split("\\r?\\n");
+        final StringBuilder result = new StringBuilder();
+        for(int i=0; i<lines.length; i++)
+            result.append(i != lineToRemove ? lines[i] : "").append("\n");
+        return result.toString();
+    }
+    
 }
