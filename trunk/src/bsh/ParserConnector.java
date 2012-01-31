@@ -1,6 +1,6 @@
 /*
  * nbBeanShell -- a integration of BeanShell into the NetBeans IDE
- * Copyright (C) 2011 Thomas Werner
+ * Copyright (C) 2012 Thomas Werner
  *
  * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any
@@ -36,7 +36,13 @@ public class ParserConnector {
      * @return a {@code BshScriptInfo} object containing the data that has been gathered
      */
     public BshScriptInfo parse(String inputString) {
-        return parse(new Parser(new StringReader(inputString)));
+        final BshScriptInfo result = parse(new Parser(new StringReader(inputString)));
+        final String lines[] = inputString.split("\\r?\\n");
+        result.setBeginColum(lines.length == 0 ? 0 : 1);
+        result.setBeginLine(lines.length == 0 ? 0 : 1);
+        result.setEndLine(lines.length == 0 ? 0 : lines.length);
+        result.setEndColum(lines.length == 0 ? 0 : lines[lines.length -1].length());
+        return result;
     }
     
     /**

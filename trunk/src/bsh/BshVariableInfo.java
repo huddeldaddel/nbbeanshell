@@ -1,6 +1,6 @@
 /*
  * nbBeanShell -- a integration of BeanShell into the NetBeans IDE
- * Copyright (C) 2011 Thomas Werner
+ * Copyright (C) 2012 Thomas Werner
  *
  * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any
@@ -15,7 +15,6 @@
  */
 package bsh;
 
-import java.awt.Image;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,6 +24,18 @@ import java.util.Set;
  * @author Thomas Werner
  */
 public class BshVariableInfo implements BshInfo {
+    
+    /**
+     * Comparator for BshVariableInfo objects.
+     */
+    public static final class Comparator implements java.util.Comparator<BshVariableInfo> {
+
+        @Override
+        public int compare(BshVariableInfo o1, BshVariableInfo o2) {
+            return o1.getName().compareTo(o2.getName());
+        }
+        
+    }
     
     private Set<BshModifierInfo> modifiers;
     private String name;

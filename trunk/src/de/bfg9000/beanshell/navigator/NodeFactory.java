@@ -1,6 +1,6 @@
 /*
  * nbBeanShell -- a integration of BeanShell into the NetBeans IDE
- * Copyright (C) 2011 Thomas Werner
+ * Copyright (C) 2012 Thomas Werner
  *
  * This library is free software; you can redistribute it and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any
@@ -19,7 +19,10 @@ import bsh.BshInfo;
 import bsh.BshInfoContainer;
 import bsh.BshMethodInfo;
 import bsh.BshVariableInfo;
-import java.util.*;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import javax.swing.text.JTextComponent;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -51,17 +54,17 @@ class NodeFactory extends ChildFactory<BshInfo> {
         while(iterator.hasNext())
             if(classes.contains(iterator.next()))
                 iterator.remove();
-        Collections.sort(methodsToAdd, new BshMethodInfoComparator());
+        Collections.sort(methodsToAdd, new BshMethodInfo.Comparator());
         toPopulate.addAll(methodsToAdd);
         
         // Sort variables and add them
         if((!(bshInfoContainer instanceof BshMethodInfo)) || ((BshMethodInfo) bshInfoContainer).isClass()) {
-            Collections.sort(variables, new BshVariableInfoComparator());
+            Collections.sort(variables, new BshVariableInfo.Comparator());
             toPopulate.addAll(variables);
         }
         
         // Sort classes and add them
-        Collections.sort(classes, new BshMethodInfoComparator());
+        Collections.sort(classes, new BshMethodInfo.Comparator());
         toPopulate.addAll(classes);
         
         return true;
@@ -78,30 +81,6 @@ class NodeFactory extends ChildFactory<BshInfo> {
             return new VariableNode((BshVariableInfo) key, connectedComponent);
         
         return null;
-    }
-    
-    /**
-     * Comparator for BshMethodInfo objects.
-     */
-    private static final class BshMethodInfoComparator implements Comparator<BshMethodInfo> {
-        
-        @Override
-        public int compare(BshMethodInfo o1, BshMethodInfo o2) {
-            return o1.getName().compareTo(o2.getName());
-        }
-        
-    }
-    
-    /**
-     * Comparator for BshVariableInfo objects.
-     */
-    private static final class BshVariableInfoComparator implements Comparator<BshVariableInfo> {
-
-        @Override
-        public int compare(BshVariableInfo o1, BshVariableInfo o2) {
-            return o1.getName().compareTo(o2.getName());
-        }
-        
     }
     
 }
