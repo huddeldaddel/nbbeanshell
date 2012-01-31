@@ -15,7 +15,7 @@
  */
 package de.bfg9000.beanshell.navigator;
 
-import bsh.ParserConnector;
+import bsh.BshParserConnector;
 import java.awt.BorderLayout;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -114,7 +114,7 @@ public class BeanShellNavigatorPanel extends JPanel implements NavigatorPanel, E
     
     private void updateContent() {
         final String script = null != connectedTextComponent ? connectedTextComponent.getText() : "";        
-        final NodeFactory factory = new NodeFactory(new ParserConnector().parse(script), connectedTextComponent);
+        final NodeFactory factory = new NodeFactory(new BshParserConnector().parse(script), connectedTextComponent);
         manager.setRootContext(new AbstractNode(Children.create(factory, false)));
         beanTreeView.expandAll();
     }
