@@ -15,10 +15,24 @@
  */
 package bsh;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
 /**
  *
  * @author Thomas Werner
  */
 public class BshScriptInfo extends BshInfoContainer {
+ 
+    protected final List<BshImportInfo> imports = new LinkedList<BshImportInfo>();
+    
+    public List<BshImportInfo> getImports() {
+        return imports;
+    }
+
+    public void addImports(Collection<BshImportInfo> importInfos) {
+        imports.addAll(importInfos);
+    }
     
 }

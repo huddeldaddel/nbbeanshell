@@ -63,6 +63,7 @@ public class BshParserConnector {
      */
     private BshScriptInfo parse(Parser parser) {
         final BshScriptInfo result = new BshScriptInfo();
+        result.addImports(getDefaultImports());
         parser.setRetainComments(true);
         
         boolean error = false;
@@ -75,6 +76,7 @@ public class BshParserConnector {
                     break;
                 
                 final SimpleNode node = parser.popNode();
+                result.addImports(getScriptImports(node));
                 if(isMethod(node)) {
                     result.addMethods(Collections.singleton(buildMethodInfo(node)));
                 } else if(isVariable(node)) {
@@ -96,6 +98,60 @@ public class BshParserConnector {
         removeLooselyTypedOuterVariables(result, getVariableNames(new ArrayList<BshVariableInfo>()));        
         return result;
     }    
+    
+    //----------------------------------------------------------------------------------------------------------------//
+    // Import handling                                                                                                //
+    //----------------------------------------------------------------------------------------------------------------//
+    
+    /**
+     * @param node a SimpleNode to be checked
+     * @return {@code true} if the given node is a import declaration
+     */
+    private boolean isImport(SimpleNode node) {
+        return node instanceof BSHImportDeclaration;
+    }
+           
+    private List<BshImportInfo> getDefaultImports() {
+        final List<BshImportInfo> result = new LinkedList<BshImportInfo>();
+        final String[] defaults = { "javax.swing.event", "javax.swing", "java.awt.event", "java.awt", "java.net", 
+                                    "java.util", "java.io", "java.lang" };
+        for(String defImport: defaults) {
+            final BshImportInfo importInfo = new BshImportInfo();
+            importInfo.addModifier(BshModifierInfo.Package);
+            importInfo.setLineNumber(-1);
+            importInfo.setName(defImport);
+            result.add(importInfo);
+        }
+        return result;
+    }
+    
+    /**
+     * @param node node that might declare an import
+     * @return a {@code BshImportInfo} for a import declaration node
+     */
+    private List<BshImportInfo> getScriptImports(SimpleNode node) {
+        final List<BshImportInfo> result = new LinkedList<BshImportInfo>();
+        final NodeHandler importHandler = new NodeHandler() {
+            @Override
+            public void handleNode(SimpleNode node) {
+                if(isImport(node)) {
+                    BSHImportDeclaration importNode = (BSHImportDeclaration) node;
+                    final BshImportInfo importInfo = new BshImportInfo();
+                    if(importNode.staticImport)
+                        importInfo.addModifier(BshModifierInfo.Static);
+                    if(importNode.superImport)
+                        importInfo.addModifier(BshModifierInfo.Super);
+                    if(importNode.importPackage)
+                        importInfo.addModifier(BshModifierInfo.Package);
+                    importInfo.setLineNumber(importNode.getLineNumber());
+                    importInfo.setName(((BSHAmbiguousName)importNode.children[0]).text);
+                    result.add(importInfo);
+                }
+            }
+        };
+        traverseNodeTree(node, importHandler);  
+        return result;
+    }
     
     //----------------------------------------------------------------------------------------------------------------//
     // Class handling                                                                                                 //
@@ -510,6 +566,16 @@ public class BshParserConnector {
 //            printNode(child, "--" +prefix);
 //        }
 //    }    
+    
+    private static interface NodeHandler {
+        public abstract void handleNode(SimpleNode node);
+    }
+    
+    private void traverseNodeTree(SimpleNode node, NodeHandler handler) {
+        handler.handleNode(node);
+        for(int i=0; i<node.jjtGetNumChildren(); i++)
+            traverseNodeTree(node.getChild(i), handler);
+    }
     
     private Set<String> getVariableNames(Collection<BshVariableInfo> variables) {
         final Set<String> result = new HashSet<String>();
