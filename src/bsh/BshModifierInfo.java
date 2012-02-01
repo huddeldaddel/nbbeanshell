@@ -22,7 +22,7 @@ package bsh;
  */
 public enum BshModifierInfo {
 
-    Private, Public, Protected, Abstract, Static, Synchronized, Final;
+    Private, Public, Protected, Abstract, Static, Synchronized, Final, Super, Package;
     
     @Override
     public String toString() {
