@@ -37,9 +37,10 @@ class VariableItemProvider implements CompletionQueryItemProvider {
         handleInfoContainer(varInfoList, scriptInfo, line, column);
         Collections.sort(varInfoList, new BshVariableInfo.Comparator());
         
+        final String lowerCaseFilter = filter.toLowerCase();
         final List<VariableCompletionItem> result = new ArrayList<VariableCompletionItem>(varInfoList.size());
         for(BshVariableInfo varInfo: varInfoList)
-            if(filter.isEmpty() || varInfo.getName().startsWith(filter))
+            if(filter.isEmpty() || varInfo.getName().toLowerCase().startsWith(lowerCaseFilter))
                 result.add(new VariableCompletionItem(varInfo, startOffset, caretOffset));
         
         return result;
